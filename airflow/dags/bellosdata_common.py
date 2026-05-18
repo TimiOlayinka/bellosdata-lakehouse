@@ -1,16 +1,16 @@
 """
-BellosData Common Pipeline Infrastructure — Shared Module
+BellosData Common Pipeline Infrastructure â€” Shared Module
 
 Provides:
-  1. rdl_write()    — Write raw JSON + ingest_date to Bronze S3 (Delta)
-  2. odl_write()    — Write typed tables to Silver S3 (Delta)
-  3. http_get()     — Resilient HTTP GET with retry + user-agent
-  4. http_get_csv() — Download and parse CSV from URL
-  5. write_manifest() — Audit manifest for every ingestion run
+  1. rdl_write()    â€” Write raw JSON + ingest_date to Bronze S3 (Delta)
+  2. odl_write()    â€” Write typed tables to Silver S3 (Delta)
+  3. http_get()     â€” Resilient HTTP GET with retry + user-agent
+  4. http_get_csv() â€” Download and parse CSV from URL
+  5. write_manifest() â€” Audit manifest for every ingestion run
 
 Architecture:
-  RDL → s3://playdarch-bronze-raw/rdl/{source}/
-  ODL → s3://playdarch-silver-curated/odl/{type}/{table}/
+  RDL â†’ s3://bellosdata-bronze-raw/rdl/{source}/
+  ODL â†’ s3://bellosdata-silver-curated/odl/{type}/{table}/
 
 Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
 """
@@ -26,9 +26,9 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
-# ── S3 Configuration ──
-S3_BRONZE_BUCKET = "playdarch-bronze-raw"
-S3_SILVER_BUCKET = "playdarch-silver-curated"
+# â”€â”€ S3 Configuration â”€â”€
+S3_BRONZE_BUCKET = "bellosdata-bronze-raw"
+S3_SILVER_BUCKET = "bellosdata-silver-curated"
 RDL_PREFIX = "rdl"
 ODL_PREFIX = "odl"
 
@@ -53,7 +53,7 @@ def _get_aws_resources():
     return session.client("s3", region_name=AWS_REGION), opts
 
 
-# ── RDL Writer ──
+# â”€â”€ RDL Writer â”€â”€
 
 def rdl_write(source_name: str, records: list[dict],
               ingest_date: Optional[str] = None) -> dict:
@@ -87,12 +87,12 @@ def rdl_write(source_name: str, records: list[dict],
                     storage_options=storage_options,
                     partition_by=["ingest_date"])
 
-    logger.info(f"RDL: {len(rdl_rows)} records → {delta_path} ({ingest_date})")
+    logger.info(f"RDL: {len(rdl_rows)} records â†’ {delta_path} ({ingest_date})")
     return {"delta_path": delta_path, "record_count": len(rdl_rows),
             "ingest_date": ingest_date, "source": source_name, "status": "OK"}
 
 
-# ── ODL Writer ──
+# â”€â”€ ODL Writer â”€â”€
 
 def odl_write(table_type: str, table_name: str,
               data: list[dict], schema=None) -> dict:
@@ -114,12 +114,12 @@ def odl_write(table_type: str, table_name: str,
     write_deltalake(delta_path, table, mode="overwrite",
                     storage_options=storage_options)
 
-    logger.info(f"ODL: {len(data)} records → {delta_path}")
+    logger.info(f"ODL: {len(data)} records â†’ {delta_path}")
     return {"delta_path": delta_path, "record_count": len(data),
             "table_name": table_name, "table_type": table_type, "status": "OK"}
 
 
-# ── HTTP Helper ──
+# â”€â”€ HTTP Helper â”€â”€
 
 def http_get(url: str, headers: Optional[dict] = None,
              retries: int = DEFAULT_RETRIES, timeout: int = DEFAULT_TIMEOUT,
@@ -162,7 +162,7 @@ def http_get_csv(url: str, headers: Optional[dict] = None,
     return list(csv.DictReader(io.StringIO(raw.decode("utf-8", errors="replace"))))
 
 
-# ── Manifest Writer ──
+# â”€â”€ Manifest Writer â”€â”€
 
 def write_manifest(dag_id: str, source_name: str, rdl_result: dict,
                    record_counts: Optional[dict] = None,

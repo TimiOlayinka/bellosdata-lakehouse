@@ -1,9 +1,9 @@
 """
-RDL Companies House Enhanced — NW England Company Intelligence Pipeline
+RDL Companies House Enhanced â€” NW England Company Intelligence Pipeline
 
 Source: Companies House Bulk Download (BasicCompanyDataAsOneFile)
 OGL v3.0 licensed. Schedule: Monthly (1st, 04:00 UTC).
-RDL Output: s3://playdarch-bronze-raw/rdl/companies/
+RDL Output: s3://bellosdata-bronze-raw/rdl/companies/
 
 Author: Awujoo (AWUJOO-041 Phase 2) | Genesis: 2026-05-17
 Trade Route: TR-002 Company Intelligence Reports
@@ -20,7 +20,7 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-RDL_COMPANIES_ASSET = Asset("s3://playdarch-bronze-raw/rdl/companies")
+RDL_COMPANIES_ASSET = Asset("s3://bellosdata-bronze-raw/rdl/companies")
 
 NW_OUTCODE_PREFIXES = (
     "M", "BL", "OL", "SK", "WN", "WA", "L", "CH",
@@ -56,7 +56,7 @@ def _compute_company_age(inc_date):
 
 @dag(
     dag_id="rdl_companies_enhanced",
-    description="Ingest NW England companies from CH bulk data (OGL v3.0 → RDL)",
+    description="Ingest NW England companies from CH bulk data (OGL v3.0 â†’ RDL)",
     schedule="0 4 1 * *",
     start_date=datetime(2026, 5, 17),
     catchup=False,
@@ -68,15 +68,15 @@ def rdl_companies_enhanced():
 
     @task()
     def fetch_bulk_csv():
-        """Get CH bulk CSV — try S3 cache, then download, then local."""
+        """Get CH bulk CSV â€” try S3 cache, then download, then local."""
         try:
             from aws_session import get_aws_session, AWS_REGION
             session = get_aws_session()
             s3 = session.client("s3", region_name=AWS_REGION)
             s3_key = "rdl/companies/bulk/BasicCompanyDataAsOneFile-latest.csv"
-            resp = s3.head_object(Bucket="playdarch-bronze-raw", Key=s3_key)
+            resp = s3.head_object(Bucket="bellosdata-bronze-raw", Key=s3_key)
             logger.info(f"S3 cache found: {resp['ContentLength']/1e6:.0f} MB")
-            return {"source": "s3_cache", "path": f"s3://playdarch-bronze-raw/{s3_key}"}
+            return {"source": "s3_cache", "path": f"s3://bellosdata-bronze-raw/{s3_key}"}
         except Exception:
             pass
 
@@ -150,7 +150,7 @@ def rdl_companies_enhanced():
                 "ingested_at": datetime.utcnow().isoformat() + "Z",
             })
             if total % 500000 == 0:
-                logger.info(f"Scanned {total:,} — NW: {len(nw):,}")
+                logger.info(f"Scanned {total:,} â€” NW: {len(nw):,}")
 
         logger.info(f"Done: {len(nw):,} NW companies from {total:,} total")
         return {"status": "OK", "records": len(nw), "total_scanned": total, "data": nw}

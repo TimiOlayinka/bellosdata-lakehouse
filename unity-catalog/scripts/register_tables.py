@@ -1,5 +1,5 @@
 """
-BellosData Unity Catalog — Table Registration Script
+BellosData Unity Catalog â€” Table Registration Script
 
 Registers the full medallion lakehouse schema in Unity Catalog OSS
 via the REST API. Organised by trade route with layer prefixes:
@@ -23,18 +23,18 @@ import sys
 
 UC_BASE = "http://localhost:8070/api/2.1/unity-catalog"
 
-# ── Catalog & Schema Definitions ──────────────────────────────
+# â”€â”€ Catalog & Schema Definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 CATALOG = "bellosdata"
-CATALOG_COMMENT = "BellosData Sovereign Lakehouse — Trade Route Architecture on S3"
+CATALOG_COMMENT = "BellosData Sovereign Lakehouse â€” Trade Route Architecture on S3"
 
 SCHEMAS = {
-    "private_jets": "TR-001 — UK Private Jet Fleet Intelligence (CAA, OpenSky)",
-    "nw_birds": "TR-004 — North West Bird Watch Intelligence (eBird, iNaturalist, Wikimedia)",
-    "core": "Operational Lakehouse — Sessions, Merchants, Trade Routes",
+    "private_jets": "TR-001 â€” UK Private Jet Fleet Intelligence (CAA, OpenSky)",
+    "nw_birds": "TR-004 â€” North West Bird Watch Intelligence (eBird, iNaturalist, Wikimedia)",
+    "core": "Operational Lakehouse â€” Sessions, Merchants, Trade Routes",
 }
 
-# ── Table Definitions ─────────────────────────────────────────
+# â”€â”€ Table Definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #
 # Naming convention:
 #   rdl_ = Raw Data Layer (Bronze)
@@ -42,14 +42,14 @@ SCHEMAS = {
 #   adl_ = Analytical Data Layer (Gold)
 
 TABLES = [
-    # ══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # private_jets (TR-001)
-    # ══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     {
         "schema": "private_jets",
         "name": "rdl_caa_register",
-        "comment": "CAA G-INFO Aircraft Register — UK private jet registrations (Raw Data Layer)",
-        "storage_location": "s3://playdarch-bronze-raw/private-jets/caa-register/",
+        "comment": "CAA G-INFO Aircraft Register â€” UK private jet registrations (Raw Data Layer)",
+        "storage_location": "s3://bellosdata-bronze-raw/private-jets/caa-register/",
         "columns": [
             {"name": "registration", "type_text": "string", "type_name": "STRING"},
             {"name": "manufacturer", "type_text": "string", "type_name": "STRING"},
@@ -67,8 +67,8 @@ TABLES = [
     {
         "schema": "private_jets",
         "name": "rdl_opensky_traffic",
-        "comment": "OpenSky ADS-B traffic snapshots — NW England airspace (Raw Data Layer)",
-        "storage_location": "s3://playdarch-bronze-raw/private-jets/opensky-traffic/",
+        "comment": "OpenSky ADS-B traffic snapshots â€” NW England airspace (Raw Data Layer)",
+        "storage_location": "s3://bellosdata-bronze-raw/private-jets/opensky-traffic/",
         "columns": [
             {"name": "icao24", "type_text": "string", "type_name": "STRING"},
             {"name": "callsign", "type_text": "string", "type_name": "STRING"},
@@ -87,8 +87,8 @@ TABLES = [
     {
         "schema": "private_jets",
         "name": "odl_fleet_enriched",
-        "comment": "Enriched fleet data — CAA + OpenSky joined, deduplicated (Operational Data Layer)",
-        "storage_location": "s3://playdarch-silver-curated/private-jets/fleet-enriched/",
+        "comment": "Enriched fleet data â€” CAA + OpenSky joined, deduplicated (Operational Data Layer)",
+        "storage_location": "s3://bellosdata-silver-curated/private-jets/fleet-enriched/",
         "columns": [
             {"name": "registration", "type_text": "string", "type_name": "STRING"},
             {"name": "icao24", "type_text": "string", "type_name": "STRING"},
@@ -107,7 +107,7 @@ TABLES = [
         "schema": "private_jets",
         "name": "adl_aging_fleet_report",
         "comment": "Business-ready aging fleet intelligence product (Analytical Data Layer)",
-        "storage_location": "s3://playdarch-gold-products/private-jets/aging-fleet-report/",
+        "storage_location": "s3://bellosdata-gold-products/private-jets/aging-fleet-report/",
         "columns": [
             {"name": "registration", "type_text": "string", "type_name": "STRING"},
             {"name": "manufacturer", "type_text": "string", "type_name": "STRING"},
@@ -121,14 +121,14 @@ TABLES = [
         ],
     },
 
-    # ══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # nw_birds (TR-004)
-    # ══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     {
         "schema": "nw_birds",
         "name": "rdl_ebird_sightings",
-        "comment": "eBird sightings — NW England bird observations (Raw Data Layer)",
-        "storage_location": "s3://playdarch-bronze-raw/nw-birds/ebird-sightings/",
+        "comment": "eBird sightings â€” NW England bird observations (Raw Data Layer)",
+        "storage_location": "s3://bellosdata-bronze-raw/nw-birds/ebird-sightings/",
         "columns": [
             {"name": "species_code", "type_text": "string", "type_name": "STRING"},
             {"name": "common_name", "type_text": "string", "type_name": "STRING"},
@@ -147,8 +147,8 @@ TABLES = [
     {
         "schema": "nw_birds",
         "name": "rdl_inaturalist",
-        "comment": "iNaturalist observations with CC-licensed photos — NW England (Raw Data Layer)",
-        "storage_location": "s3://playdarch-bronze-raw/nw-birds/inaturalist/",
+        "comment": "iNaturalist observations with CC-licensed photos â€” NW England (Raw Data Layer)",
+        "storage_location": "s3://bellosdata-bronze-raw/nw-birds/inaturalist/",
         "columns": [
             {"name": "inat_id", "type_text": "int", "type_name": "INT"},
             {"name": "species_common", "type_text": "string", "type_name": "STRING"},
@@ -168,8 +168,8 @@ TABLES = [
     {
         "schema": "nw_birds",
         "name": "rdl_wikimedia_photos",
-        "comment": "Wikimedia Commons CC-licensed bird photos — NW signature species (Raw Data Layer)",
-        "storage_location": "s3://playdarch-bronze-raw/nw-birds/wikimedia-photos/",
+        "comment": "Wikimedia Commons CC-licensed bird photos â€” NW signature species (Raw Data Layer)",
+        "storage_location": "s3://bellosdata-bronze-raw/nw-birds/wikimedia-photos/",
         "columns": [
             {"name": "species_name", "type_text": "string", "type_name": "STRING"},
             {"name": "title", "type_text": "string", "type_name": "STRING"},
@@ -187,8 +187,8 @@ TABLES = [
     {
         "schema": "nw_birds",
         "name": "odl_species_unified",
-        "comment": "Unified species data — eBird + iNaturalist cross-referenced (Operational Data Layer)",
-        "storage_location": "s3://playdarch-silver-curated/nw-birds/species-unified/",
+        "comment": "Unified species data â€” eBird + iNaturalist cross-referenced (Operational Data Layer)",
+        "storage_location": "s3://bellosdata-silver-curated/nw-birds/species-unified/",
         "columns": [
             {"name": "species_code", "type_text": "string", "type_name": "STRING"},
             {"name": "common_name", "type_text": "string", "type_name": "STRING"},
@@ -205,7 +205,7 @@ TABLES = [
         "schema": "nw_birds",
         "name": "adl_bird_intelligence",
         "comment": "Business-ready NW bird intelligence product with imagery (Analytical Data Layer)",
-        "storage_location": "s3://playdarch-gold-products/nw-birds/bird-intelligence/",
+        "storage_location": "s3://bellosdata-gold-products/nw-birds/bird-intelligence/",
         "columns": [
             {"name": "species_code", "type_text": "string", "type_name": "STRING"},
             {"name": "common_name", "type_text": "string", "type_name": "STRING"},
@@ -219,14 +219,14 @@ TABLES = [
         ],
     },
 
-    # ══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     # core (Operational Lakehouse)
-    # ══════════════════════════════════════════════════════════
+    # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     {
         "schema": "core",
         "name": "rdl_sessions",
-        "comment": "Awujoo session records — compute token tracking (Raw Data Layer)",
-        "storage_location": "s3://playdarch-bronze-raw/lakehouse/sessions/",
+        "comment": "Awujoo session records â€” compute token tracking (Raw Data Layer)",
+        "storage_location": "s3://bellosdata-bronze-raw/lakehouse/sessions/",
         "columns": [
             {"name": "session_id", "type_text": "string", "type_name": "STRING"},
             {"name": "date", "type_text": "string", "type_name": "STRING"},
@@ -240,8 +240,8 @@ TABLES = [
     {
         "schema": "core",
         "name": "rdl_merchants",
-        "comment": "Merchant profile data — active ecosystem members (Raw Data Layer)",
-        "storage_location": "s3://playdarch-bronze-raw/lakehouse/merchants/",
+        "comment": "Merchant profile data â€” active ecosystem members (Raw Data Layer)",
+        "storage_location": "s3://bellosdata-bronze-raw/lakehouse/merchants/",
         "columns": [
             {"name": "merchant_id", "type_text": "string", "type_name": "STRING"},
             {"name": "name", "type_text": "string", "type_name": "STRING"},
@@ -253,8 +253,8 @@ TABLES = [
     {
         "schema": "core",
         "name": "rdl_trade_routes",
-        "comment": "Trade route registry — BellosData revenue streams (Raw Data Layer)",
-        "storage_location": "s3://playdarch-bronze-raw/lakehouse/trade_routes/",
+        "comment": "Trade route registry â€” BellosData revenue streams (Raw Data Layer)",
+        "storage_location": "s3://bellosdata-bronze-raw/lakehouse/trade_routes/",
         "columns": [
             {"name": "route_id", "type_text": "string", "type_name": "STRING"},
             {"name": "name", "type_text": "string", "type_name": "STRING"},
@@ -266,8 +266,8 @@ TABLES = [
     {
         "schema": "core",
         "name": "odl_session_analytics",
-        "comment": "Cleaned session metrics — token efficiency, value ratios (Operational Data Layer)",
-        "storage_location": "s3://playdarch-silver-curated/lakehouse/session_analytics/",
+        "comment": "Cleaned session metrics â€” token efficiency, value ratios (Operational Data Layer)",
+        "storage_location": "s3://bellosdata-silver-curated/lakehouse/session_analytics/",
         "columns": [
             {"name": "session_id", "type_text": "string", "type_name": "STRING"},
             {"name": "date", "type_text": "string", "type_name": "STRING"},
@@ -280,7 +280,7 @@ TABLES = [
         "schema": "core",
         "name": "adl_merchant_pulse",
         "comment": "Real-time merchant health dashboard (Analytical Data Layer)",
-        "storage_location": "s3://playdarch-gold-products/lakehouse/merchant_pulse/",
+        "storage_location": "s3://bellosdata-gold-products/lakehouse/merchant_pulse/",
         "columns": [
             {"name": "merchant_id", "type_text": "string", "type_name": "STRING"},
             {"name": "name", "type_text": "string", "type_name": "STRING"},
@@ -293,7 +293,7 @@ TABLES = [
         "schema": "core",
         "name": "adl_trade_flow",
         "comment": "Revenue and delivery tracking across all trade routes (Analytical Data Layer)",
-        "storage_location": "s3://playdarch-gold-products/lakehouse/trade_flow/",
+        "storage_location": "s3://bellosdata-gold-products/lakehouse/trade_flow/",
         "columns": [
             {"name": "route_id", "type_text": "string", "type_name": "STRING"},
             {"name": "name", "type_text": "string", "type_name": "STRING"},

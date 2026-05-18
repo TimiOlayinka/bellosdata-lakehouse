@@ -1,5 +1,5 @@
 """
-Receipt Archive DAG — The Keeper of Records
+Receipt Archive DAG â€” The Keeper of Records
 
 Daily sync of all receipts to S3 and blockchain integrity verification.
 
@@ -19,9 +19,9 @@ from airflow.timetables.assets import AssetOrTimeSchedule
 from airflow.timetables.trigger import CronTriggerTimetable
 from aws_session import get_aws_session, is_cloud
 
-# ── Assets ─────────────────────────────────────────────────
-RECEIPTS_TRIGGER = Asset("s3://playdarch-bronze-raw/receipts")
-RECEIPTS_OUTLET = Asset("s3://playdarch-bronze-raw/receipts-archived")
+# â”€â”€ Assets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+RECEIPTS_TRIGGER = Asset("s3://bellosdata-bronze-raw/receipts")
+RECEIPTS_OUTLET = Asset("s3://bellosdata-bronze-raw/receipts-archived")
 
 # Local receipt dirs (only accessible on local machine)
 LOCAL_RECEIPT_DIRS = [
@@ -29,9 +29,9 @@ LOCAL_RECEIPT_DIRS = [
     r"Y:\Merchant Ledger\receipts",
     r"Y:\brain\SHARED.brain\merchant-ledger\receipts",
 ]
-# Cloud: no local dirs — only verify S3 blockchain integrity
+# Cloud: no local dirs â€” only verify S3 blockchain integrity
 RECEIPT_DIRS = [] if is_cloud() else LOCAL_RECEIPT_DIRS
-S3_BUCKET = "playdarch-bronze-raw"
+S3_BUCKET = "bellosdata-bronze-raw"
 S3_RECEIPTS_PREFIX = "receipts"
 S3_BLOCKCHAIN_PREFIX = "blockchain"
 ALERTS_DIR = "/tmp/bellosdata/alerts" if is_cloud() else r"X:\BellosData\alerts"

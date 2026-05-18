@@ -1,7 +1,7 @@
 """
 BellosData DuckDB Query Console
 Run: python duckdb_console.py
-Cost: $0 — DuckDB reads S3 Delta tables directly from your machine.
+Cost: $0 â€” DuckDB reads S3 Delta tables directly from your machine.
 """
 import duckdb
 
@@ -12,9 +12,9 @@ db.execute("INSTALL httpfs; INSTALL delta; LOAD httpfs; LOAD delta")
 db.execute("SET s3_region = 'eu-west-2'")
 
 print("=" * 60)
-print("  BellosData Lake — DuckDB Query Console")
+print("  BellosData Lake â€” DuckDB Query Console")
 print("  Type SQL queries. Type 'exit' to quit.")
-print("  Tables: delta_scan('s3://playdarch-bronze-raw/rdl/{source}/')")
+print("  Tables: delta_scan('s3://bellosdata-bronze-raw/rdl/{source}/')")
 print("=" * 60)
 print()
 
@@ -23,7 +23,7 @@ print("Running inventory check...")
 try:
     for source in ["weather", "wind", "postcodes", "airports", "companies", "landscapes"]:
         try:
-            r = db.execute(f"SELECT COUNT(*) AS n FROM delta_scan('s3://playdarch-bronze-raw/rdl/{source}/')").fetchone()
+            r = db.execute(f"SELECT COUNT(*) AS n FROM delta_scan('s3://bellosdata-bronze-raw/rdl/{source}/')").fetchone()
             print(f"  rdl/{source}: {r[0]:,} records")
         except Exception:
             print(f"  rdl/{source}: (no data yet)")

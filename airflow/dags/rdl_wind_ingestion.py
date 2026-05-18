@@ -1,16 +1,16 @@
 """
-RDL Wind Ingestion — Wind Speed & Energy Intelligence Pipeline
+RDL Wind Ingestion â€” Wind Speed & Energy Intelligence Pipeline
 
 Source: Open-Meteo API (completely free, no API key)
 Ingests multi-height wind data (10m, 80m, 120m) for NW England.
 Used for: aviation safety (TR-001 jets), renewable energy analysis.
 
 Schedule: Daily at 08:30 UTC (offset from weather to avoid overlap)
-RDL Output: s3://playdarch-bronze-raw/rdl/wind/
+RDL Output: s3://bellosdata-bronze-raw/rdl/wind/
 Asset: Triggers downstream ODL fact_wind_measurement builder
 
 Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
-Trade Route: TR-001 (Private Jets — wind corridor analysis)
+Trade Route: TR-001 (Private Jets â€” wind corridor analysis)
 """
 
 from datetime import datetime, timedelta
@@ -21,10 +21,10 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-# ── Assets ──
-RDL_WIND_ASSET = Asset("s3://playdarch-bronze-raw/rdl/wind")
+# â”€â”€ Assets â”€â”€
+RDL_WIND_ASSET = Asset("s3://bellosdata-bronze-raw/rdl/wind")
 
-# ── NW England Wind Measurement Points ──
+# â”€â”€ NW England Wind Measurement Points â”€â”€
 # Includes aviation sites + elevated/coastal sites for wind intelligence
 WIND_POINTS = {
     "manchester_airport":  {"lat": 53.36, "lon": -2.27, "label": "Manchester Airport (EGCC)"},
@@ -52,7 +52,7 @@ OPEN_METEO_BASE = "https://api.open-meteo.com/v1/forecast"
 
 @dag(
     dag_id="rdl_wind_ingestion",
-    description="Ingest multi-height wind data for NW England (Open-Meteo → RDL)",
+    description="Ingest multi-height wind data for NW England (Open-Meteo â†’ RDL)",
     schedule="30 8 * * *",
     start_date=datetime(2026, 5, 17),
     catchup=False,
@@ -103,8 +103,8 @@ def rdl_wind_ingestion():
                         values = hourly.get(var, [])
                         record[var] = values[i] if i < len(values) else None
 
-                    # Derived: estimate wind power density (W/m²)
-                    # P = 0.5 * ρ * v³ where ρ ≈ 1.225 kg/m³
+                    # Derived: estimate wind power density (W/mÂ²)
+                    # P = 0.5 * Ï * vÂ³ where Ï â‰ˆ 1.225 kg/mÂ³
                     ws80 = record.get("wind_speed_80m")
                     if ws80 is not None and ws80 > 0:
                         record["wind_power_density_80m"] = round(
@@ -117,7 +117,7 @@ def rdl_wind_ingestion():
                     record["ingested_at"] = datetime.utcnow().isoformat() + "Z"
                     all_measurements.append(record)
 
-                logger.info(f"Wind: {point['label']} → {len(times)} hourly records")
+                logger.info(f"Wind: {point['label']} â†’ {len(times)} hourly records")
 
             except Exception as e:
                 logger.warning(f"Wind failed for {point['label']}: {e}")
@@ -151,7 +151,7 @@ def rdl_wind_ingestion():
             },
         )
 
-    # ── DAG Flow ──
+    # â”€â”€ DAG Flow â”€â”€
     wind = ingest_wind_grid()
     write_to_rdl(wind)
 

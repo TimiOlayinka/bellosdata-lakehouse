@@ -1,17 +1,17 @@
 """
-NW Bird Watch Intelligence — Multi-Source Ingestion Pipeline
+NW Bird Watch Intelligence â€” Multi-Source Ingestion Pipeline
 
 Ingests North West England bird data from:
-1. eBird API (Cornell Lab) — Recent bird sightings by county
-2. iNaturalist API — Bird observations with CC-licensed photos
-3. Wikimedia Commons API — CC-BY bird species photos for product enrichment
+1. eBird API (Cornell Lab) â€” Recent bird sightings by county
+2. iNaturalist API â€” Bird observations with CC-licensed photos
+3. Wikimedia Commons API â€” CC-BY bird species photos for product enrichment
 
 Focus: North West England (Lancashire, Cumbria, Greater Manchester, Merseyside, Cheshire)
-Schedule: Weekly (Wednesdays 07:00 UTC — midweek for freshest sighting data)
+Schedule: Weekly (Wednesdays 07:00 UTC â€” midweek for freshest sighting data)
 Author: Awujoo (AWUJOO-029)
 Genesis: 2026-05-16
 
-Trade Route: TR-004 — NW Bird Watch Intelligence
+Trade Route: TR-004 â€” NW Bird Watch Intelligence
 """
 
 from datetime import datetime, timedelta
@@ -23,11 +23,11 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-# ── Assets ─────────────────────────────────────────────────
-NW_BIRD_BRONZE = Asset("s3://playdarch-bronze-raw/nw-birds")
+# â”€â”€ Assets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+NW_BIRD_BRONZE = Asset("s3://bellosdata-bronze-raw/nw-birds")
 
-# ── Configuration ──────────────────────────────────────────
-S3_BUCKET = "playdarch-bronze-raw"
+# â”€â”€ Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+S3_BUCKET = "bellosdata-bronze-raw"
 S3_PREFIX = "nw-birds"
 from aws_session import get_aws_session, AWS_REGION
 REGION = AWS_REGION
@@ -104,7 +104,7 @@ def nw_bird_ingestion():
         import urllib.request
         import ssl
 
-        # eBird API key — stored as env var, falls back to public limited access
+        # eBird API key â€” stored as env var, falls back to public limited access
         EBIRD_API_KEY = os.environ.get("EBIRD_API_KEY", "")
 
         if not EBIRD_API_KEY:
@@ -337,7 +337,7 @@ def nw_bird_ingestion():
                     "ingested_at": datetime.utcnow().isoformat() + "Z",
                 })
 
-            logger.info(f"Wikimedia: {species_name} → {len(pages)} images found")
+            logger.info(f"Wikimedia: {species_name} â†’ {len(pages)} images found")
 
         logger.info(f"Wikimedia total: {len(all_photos)} CC-licensed bird photos for {len(NW_SIGNATURE_SPECIES)} species")
 
@@ -379,7 +379,7 @@ def nw_bird_ingestion():
 
         uploaded = {}
 
-        # ── eBird sightings → Delta ──
+        # â”€â”€ eBird sightings â†’ Delta â”€â”€
         if ebird_result.get("status") in ("OK", "PARTIAL") and ebird_result.get("data"):
             table = pa.Table.from_pylist(ebird_result["data"])
             delta_path = f"s3://{S3_BUCKET}/{S3_PREFIX}/ebird-sightings"
@@ -393,9 +393,9 @@ def nw_bird_ingestion():
                 "delta_table": delta_path,
                 "records": ebird_result["records"],
             }
-            logger.info(f"Wrote {ebird_result['records']} eBird records → {delta_path} (Delta)")
+            logger.info(f"Wrote {ebird_result['records']} eBird records â†’ {delta_path} (Delta)")
 
-        # ── iNaturalist observations → Delta ──
+        # â”€â”€ iNaturalist observations â†’ Delta â”€â”€
         # Flatten cc_photos list to JSON string for Delta compatibility
         if inat_result.get("status") == "OK" and inat_result.get("data"):
             # Serialize nested cc_photos as JSON strings for flat Delta table
@@ -418,9 +418,9 @@ def nw_bird_ingestion():
                 "records": inat_result["records"],
                 "cc_photos": inat_result.get("total_cc_photos", 0),
             }
-            logger.info(f"Wrote {inat_result['records']} iNaturalist records → {delta_path} (Delta)")
+            logger.info(f"Wrote {inat_result['records']} iNaturalist records â†’ {delta_path} (Delta)")
 
-        # ── Wikimedia Commons photos → Delta ──
+        # â”€â”€ Wikimedia Commons photos â†’ Delta â”€â”€
         if wikimedia_result.get("status") == "OK" and wikimedia_result.get("data"):
             table = pa.Table.from_pylist(wikimedia_result["data"])
             delta_path = f"s3://{S3_BUCKET}/{S3_PREFIX}/wikimedia-photos"
@@ -435,9 +435,9 @@ def nw_bird_ingestion():
                 "records": wikimedia_result["records"],
                 "species_covered": wikimedia_result.get("species_covered", 0),
             }
-            logger.info(f"Wrote {wikimedia_result['records']} Wikimedia photos → {delta_path} (Delta)")
+            logger.info(f"Wrote {wikimedia_result['records']} Wikimedia photos â†’ {delta_path} (Delta)")
 
-        # ── Ingestion manifest (JSON — metadata, not governed data) ──
+        # â”€â”€ Ingestion manifest (JSON â€” metadata, not governed data) â”€â”€
         total_records = sum(v.get("records", 0) for v in uploaded.values())
         manifest = {
             "ingestion_id": f"BIRD-{ts_str}",
@@ -464,7 +464,7 @@ def nw_bird_ingestion():
 
         return manifest
 
-    # ── DAG Flow ──────────────────────────────────────────
+    # â”€â”€ DAG Flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # All three sources ingest in parallel, then write to Bronze
     ebird = ingest_ebird_sightings()
     inat = ingest_inaturalist_observations()

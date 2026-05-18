@@ -1,5 +1,5 @@
 """
-Drive Sync DAG — The Grand Inventory
+Drive Sync DAG â€” The Grand Inventory
 
 Scans all local drives (D:, X:, Y:) for files that must be in S3,
 diffs against current S3 state, and transfers only what has changed.
@@ -11,8 +11,8 @@ Schedule: Daily at 06:00 UTC + manual trigger
 Author: Awujoo (AWUJOO-024)
 Date: 2026-05-15
 
-"A merchant must keep three books — the memorandum, the journal, and the ledger."
-— Cotrugli, 1458
+"A merchant must keep three books â€” the memorandum, the journal, and the ledger."
+â€” Cotrugli, 1458
 """
 
 from datetime import datetime, timedelta
@@ -25,19 +25,19 @@ from pathlib import Path
 from airflow.decorators import dag, task
 from airflow.sdk import Asset
 
-# ── Assets (Airflow 3.x) ──────────────────────────────────────
-LEDGER_LIVE_ASSET = Asset("s3://playdarch-bronze-raw/ledger-live")
-RECEIPTS_ASSET = Asset("s3://playdarch-bronze-raw/receipts")
-GOVERNANCE_ASSET = Asset("s3://playdarch-bronze-raw/governance")
+# â”€â”€ Assets (Airflow 3.x) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+LEDGER_LIVE_ASSET = Asset("s3://bellosdata-bronze-raw/ledger-live")
+RECEIPTS_ASSET = Asset("s3://bellosdata-bronze-raw/receipts")
+GOVERNANCE_ASSET = Asset("s3://bellosdata-bronze-raw/governance")
 
-# ── Configuration ──────────────────────────────────────────────
-S3_BUCKET = "playdarch-bronze-raw"
+# â”€â”€ Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+S3_BUCKET = "bellosdata-bronze-raw"
 from aws_session import get_aws_session
 SESSION_ID = "AWUJOO-024"
 
 # Master manifest: every file that should live in S3
 SYNC_MANIFEST = {
-    # ── D: Drive — Critical Ledger State ──
+    # â”€â”€ D: Drive â€” Critical Ledger State â”€â”€
     "ledger_state": {
         "source_dir": r"D:\AlwaysPlanning\merchant-ledger",
         "s3_prefix": "ledger-live",
@@ -54,7 +54,7 @@ SYNC_MANIFEST = {
             "ledger-data-timi-olayinka.json",
         ],
     },
-    # ── D: Drive — Governance Docs ──
+    # â”€â”€ D: Drive â€” Governance Docs â”€â”€
     "governance": {
         "source_dir": r"D:\AlwaysPlanning\merchant-ledger",
         "s3_prefix": "governance",
@@ -64,37 +64,37 @@ SYNC_MANIFEST = {
             "LIBRARY.md",
         ],
     },
-    # ── X: Drive — Receipts ──
+    # â”€â”€ X: Drive â€” Receipts â”€â”€
     "receipts_primary": {
         "source_dir": r"X:\BellosData\receipts",
         "s3_prefix": "receipts",
         "glob": "*.md",
     },
-    # ── X: Drive — Alerts ──
+    # â”€â”€ X: Drive â€” Alerts â”€â”€
     "alerts": {
         "source_dir": r"X:\BellosData\alerts",
         "s3_prefix": "alerts",
         "glob": "*.*",
     },
-    # ── Y: Drive — Dashuida Archive State ──
+    # â”€â”€ Y: Drive â€” Dashuida Archive State â”€â”€
     "dashuida_state": {
         "source_dir": r"Y:\Merchant Ledger",
         "s3_prefix": "dashuida-archive",
         "glob": "*.json",
     },
-    # ── Y: Drive — Dashuida Receipts ──
+    # â”€â”€ Y: Drive â€” Dashuida Receipts â”€â”€
     "dashuida_receipts": {
         "source_dir": r"Y:\Merchant Ledger\receipts",
         "s3_prefix": "receipts",
         "glob": "*.md",
     },
-    # ── Y: Drive — SHARED.brain Receipts ──
+    # â”€â”€ Y: Drive â€” SHARED.brain Receipts â”€â”€
     "shared_brain_receipts": {
         "source_dir": r"Y:\brain\SHARED.brain\merchant-ledger\receipts",
         "s3_prefix": "receipts",
         "glob": "*.md",
     },
-    # ── Y: Drive — Need Advice docs ──
+    # â”€â”€ Y: Drive â€” Need Advice docs â”€â”€
     "need_advice": {
         "source_dir": r"Y:\Merchant Ledger",
         "s3_prefix": "governance/need-advice",
@@ -179,7 +179,7 @@ def drive_sync():
 
     @task()
     def diff_with_s3(local_files: list) -> list:
-        """Compare local hashes with S3 metadata — only sync what changed."""
+        """Compare local hashes with S3 metadata â€” only sync what changed."""
         import boto3
 
         session = get_aws_session()
@@ -196,7 +196,7 @@ def drive_sync():
                 s3_hash = head.get("Metadata", {}).get("sha256", "")
 
                 if s3_hash == local_hash:
-                    # File unchanged — skip
+                    # File unchanged â€” skip
                     logger.debug(f"Unchanged: {s3_key}")
                     continue
                 else:
@@ -303,7 +303,7 @@ def drive_sync():
 
                 if s3_hash == expected_hash:
                     invoice = complete_invoice(invoice)
-                    logger.info(f"✅ {s3_key} — verified")
+                    logger.info(f"âœ… {s3_key} â€” verified")
                 else:
                     invoice = fail_invoice(invoice, f"Hash mismatch: expected {expected_hash[:16]}..., got {s3_hash[:16]}...")
 
@@ -332,7 +332,7 @@ def drive_sync():
         )
         return receipt
 
-    # ── DAG Flow ──────────────────────────────────────────
+    # â”€â”€ DAG Flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     local = scan_local_drives()
     changed = diff_with_s3(local)
     invoices = create_invoices(changed)

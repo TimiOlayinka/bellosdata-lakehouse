@@ -1,5 +1,5 @@
 """
-ODL Fact Builder — YAML-Driven Fact Table Materialiser
+ODL Fact Builder â€” YAML-Driven Fact Table Materialiser
 
 Reads fact definitions from config/facts.yml and materialises
 typed fact tables into Silver S3 from RDL raw data.
@@ -8,10 +8,10 @@ Triggered by upstream ODL dim Assets (dims must exist before facts).
 Each fact is built independently based on its YAML spec.
 
 Architecture:
-  config/facts.yml       → This DAG reads specs
-  rdl/{source}/          → This DAG reads raw data
-  odl/dim/{dim}/         → This DAG reads dims for SK lookups
-  odl/fact/{fact_name}/  → This DAG writes typed Delta tables
+  config/facts.yml       â†’ This DAG reads specs
+  rdl/{source}/          â†’ This DAG reads raw data
+  odl/dim/{dim}/         â†’ This DAG reads dims for SK lookups
+  odl/fact/{fact_name}/  â†’ This DAG writes typed Delta tables
 
 Author: Awujoo (AWUJOO-041 Phase 2) | Genesis: 2026-05-17
 """
@@ -25,17 +25,17 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-# Input Assets — ODL dims must be built first
-ODL_DIM_DATE = Asset("s3://playdarch-silver-curated/odl/dim/dim_date")
-ODL_DIM_LOCATION = Asset("s3://playdarch-silver-curated/odl/dim/dim_location")
-ODL_DIM_WEATHER_STATION = Asset("s3://playdarch-silver-curated/odl/dim/dim_weather_station")
-ODL_DIM_AIRPORT = Asset("s3://playdarch-silver-curated/odl/dim/dim_airport")
+# Input Assets â€” ODL dims must be built first
+ODL_DIM_DATE = Asset("s3://bellosdata-silver-curated/odl/dim/dim_date")
+ODL_DIM_LOCATION = Asset("s3://bellosdata-silver-curated/odl/dim/dim_location")
+ODL_DIM_WEATHER_STATION = Asset("s3://bellosdata-silver-curated/odl/dim/dim_weather_station")
+ODL_DIM_AIRPORT = Asset("s3://bellosdata-silver-curated/odl/dim/dim_airport")
 
 # Output Assets
-ODL_FACT_WEATHER = Asset("s3://playdarch-silver-curated/odl/fact/fact_weather_observation")
-ODL_FACT_WIND = Asset("s3://playdarch-silver-curated/odl/fact/fact_wind_measurement")
-ODL_FACT_FLIGHT = Asset("s3://playdarch-silver-curated/odl/fact/fact_flight_movement")
-ODL_FACT_COMPANY = Asset("s3://playdarch-silver-curated/odl/fact/fact_company_filing")
+ODL_FACT_WEATHER = Asset("s3://bellosdata-silver-curated/odl/fact/fact_weather_observation")
+ODL_FACT_WIND = Asset("s3://bellosdata-silver-curated/odl/fact/fact_wind_measurement")
+ODL_FACT_FLIGHT = Asset("s3://bellosdata-silver-curated/odl/fact/fact_flight_movement")
+ODL_FACT_COMPANY = Asset("s3://bellosdata-silver-curated/odl/fact/fact_company_filing")
 
 CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config")
 
@@ -65,7 +65,7 @@ def _read_rdl(source_path):
     if creds.token:
         opts["AWS_SESSION_TOKEN"] = creds.token
     try:
-        dt = DeltaTable(f"s3://playdarch-bronze-raw/{source_path}", storage_options=opts)
+        dt = DeltaTable(f"s3://bellosdata-bronze-raw/{source_path}", storage_options=opts)
         df = dt.to_pandas()
         records = []
         for _, row in df.iterrows():
@@ -93,7 +93,7 @@ def odl_fact_builder():
 
     @task(outlets=[ODL_FACT_WEATHER])
     def build_fact_weather_observation():
-        """Build fact_weather_observation — hourly weather per station."""
+        """Build fact_weather_observation â€” hourly weather per station."""
         from bellosdata_common import odl_write
         spec = _get_fact_spec("fact_weather_observation")
         logger.info(f"Building {spec['name']} (grain: {spec['grain']})")
@@ -146,7 +146,7 @@ def odl_fact_builder():
 
     @task(outlets=[ODL_FACT_WIND])
     def build_fact_wind_measurement():
-        """Build fact_wind_measurement — multi-height wind per point."""
+        """Build fact_wind_measurement â€” multi-height wind per point."""
         from bellosdata_common import odl_write
         spec = _get_fact_spec("fact_wind_measurement")
         logger.info(f"Building {spec['name']} (grain: {spec['grain']})")
@@ -192,7 +192,7 @@ def odl_fact_builder():
 
     @task(outlets=[ODL_FACT_FLIGHT])
     def build_fact_flight_movement():
-        """Build fact_flight_movement — aircraft position snapshots."""
+        """Build fact_flight_movement â€” aircraft position snapshots."""
         from bellosdata_common import odl_write
         spec = _get_fact_spec("fact_flight_movement")
         logger.info(f"Building {spec['name']} (grain: {spec['grain']})")
@@ -234,7 +234,7 @@ def odl_fact_builder():
 
     @task(outlets=[ODL_FACT_COMPANY])
     def build_fact_company_filing():
-        """Build fact_company_filing — CH filing events for NW companies."""
+        """Build fact_company_filing â€” CH filing events for NW companies."""
         from bellosdata_common import odl_write
         spec = _get_fact_spec("fact_company_filing")
         logger.info(f"Building {spec['name']} (grain: {spec['grain']})")

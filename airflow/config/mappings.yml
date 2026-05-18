@@ -1,5 +1,5 @@
-# ═══════════════════════════════════════════════════════════
-# BellosData Mapping Table Registry — Bridge/Link Configuration
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# BellosData Mapping Table Registry â€” Bridge/Link Configuration
 #
 # Mapping tables bridge dimensions together. They resolve
 # many-to-many and cross-domain relationships in the ODL.
@@ -8,16 +8,16 @@
 # to construct map_* Delta tables in Silver S3.
 #
 # Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
-# ═══════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 version: "1.0"
 layer: "ODL"
-s3_bucket: "playdarch-silver-curated"
+s3_bucket: "bellosdata-silver-curated"
 s3_prefix: "odl/map"
 
 mappings:
 
-  # ── Postcode → Location ──────────────────────────────────
+  # â”€â”€ Postcode â†’ Location â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: map_postcode_to_location
     description: "Links every postcode to its dim_location surrogate key"
     type: one_to_one
@@ -41,7 +41,7 @@ mappings:
       - name: longitude
         dtype: float64
 
-  # ── Company → Postcode ───────────────────────────────────
+  # â”€â”€ Company â†’ Postcode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: map_company_to_postcode
     description: "Links companies to their registered address postcode"
     type: many_to_one
@@ -64,7 +64,7 @@ mappings:
       - name: company_status
         dtype: string
 
-  # ── Airport → Location ───────────────────────────────────
+  # â”€â”€ Airport â†’ Location â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: map_airport_to_location
     description: "Links airports to their nearest postcode/location"
     type: one_to_one
@@ -90,7 +90,7 @@ mappings:
         dtype: float32
         description: "Distance to postcode centroid"
 
-  # ── Species → Habitat ────────────────────────────────────
+  # â”€â”€ Species â†’ Habitat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: map_species_to_habitat
     description: "Links bird species to their typical habitat types"
     type: many_to_many
@@ -117,7 +117,7 @@ mappings:
         dtype: string
         description: "all_year, breeding, winter, passage"
 
-  # ── Jet Owner → Company ──────────────────────────────────
+  # â”€â”€ Jet Owner â†’ Company â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: map_owner_to_company
     description: "Links CAA registered jet owners to Companies House records"
     type: many_to_one
@@ -144,7 +144,7 @@ mappings:
         dtype: string
         description: "exact, fuzzy, manual"
 
-  # ── Weather Station → Location ───────────────────────────
+  # â”€â”€ Weather Station â†’ Location â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: map_station_to_location
     description: "Links weather grid points to nearest postcode"
     type: one_to_one

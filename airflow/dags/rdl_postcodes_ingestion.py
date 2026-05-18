@@ -1,12 +1,12 @@
 """
-RDL Postcodes Ingestion — UK Postcode Geography Pipeline
+RDL Postcodes Ingestion â€” UK Postcode Geography Pipeline
 
 Source: postcodes.io (100% free, open-source, no API key)
 Ingests NW England postcodes with lat/lon, LSOA, MSOA, ward, constituency.
-This is the FOUNDATIONAL enrichment — everything links to postcodes.
+This is the FOUNDATIONAL enrichment â€” everything links to postcodes.
 
 Schedule: Monthly (1st of month at 03:00 UTC)
-RDL Output: s3://playdarch-bronze-raw/rdl/postcodes/
+RDL Output: s3://bellosdata-bronze-raw/rdl/postcodes/
 Asset: Triggers downstream ODL dim_location builder
 
 Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
@@ -22,10 +22,10 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-# ── Assets ──
-RDL_POSTCODES_ASSET = Asset("s3://playdarch-bronze-raw/rdl/postcodes")
+# â”€â”€ Assets â”€â”€
+RDL_POSTCODES_ASSET = Asset("s3://bellosdata-bronze-raw/rdl/postcodes")
 
-# ── NW England Postcode Districts ──
+# â”€â”€ NW England Postcode Districts â”€â”€
 # These are the outcode prefixes covering the North West
 NW_OUTCODE_PREFIXES = [
     # Greater Manchester
@@ -40,14 +40,14 @@ NW_OUTCODE_PREFIXES = [
     "CW",
 ]
 
-# postcodes.io bulk lookup — 100 postcodes per request
+# postcodes.io bulk lookup â€” 100 postcodes per request
 POSTCODES_IO_BASE = "https://api.postcodes.io"
 OUTCODES_ENDPOINT = f"{POSTCODES_IO_BASE}/outcodes"
 
 
 @dag(
     dag_id="rdl_postcodes_ingestion",
-    description="Ingest UK postcode geography for NW England (postcodes.io → RDL)",
+    description="Ingest UK postcode geography for NW England (postcodes.io â†’ RDL)",
     schedule="0 3 1 * *",
     start_date=datetime(2026, 5, 17),
     catchup=False,
@@ -102,10 +102,10 @@ def rdl_postcodes_ingestion():
                             "ingested_at": datetime.utcnow().isoformat() + "Z",
                         })
                 except Exception:
-                    # Outcode doesn't exist — skip silently
+                    # Outcode doesn't exist â€” skip silently
                     continue
 
-                # Be respectful — small delay between requests
+                # Be respectful â€” small delay between requests
                 time.sleep(0.05)
 
             logger.info(f"Prefix {prefix}: scanned, found outcodes so far: {len(all_outcodes)}")
@@ -220,7 +220,7 @@ def rdl_postcodes_ingestion():
 
         return manifest
 
-    # ── DAG Flow ──
+    # â”€â”€ DAG Flow â”€â”€
     outcodes = ingest_outcodes()
     postcodes = ingest_random_postcodes()
     write_to_rdl(outcodes, postcodes)

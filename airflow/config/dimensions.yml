@@ -1,35 +1,35 @@
-# ═══════════════════════════════════════════════════════════
-# BellosData Dimension Registry — Master Configuration
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# BellosData Dimension Registry â€” Master Configuration
 #
 # This file defines ALL dimensions in the ODL (Operational Data Layer).
 # Each dimension is either FLAT (simple lookup) or HIERARCHY (parent-child).
 #
 # The ODL dim builder reads this registry and constructs Delta tables
-# in s3://playdarch-silver-curated/odl/dim/{dim_name}/
+# in s3://bellosdata-silver-curated/odl/dim/{dim_name}/
 #
 # Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
-# ═══════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 version: "1.0"
 layer: "ODL"
-s3_bucket: "playdarch-silver-curated"
+s3_bucket: "bellosdata-silver-curated"
 s3_prefix: "odl/dim"
 default_scd_type: 2
 default_format: "delta"
 
-# ── FLAT DIMENSIONS ────────────────────────────────────────
+# â”€â”€ FLAT DIMENSIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Simple lookup tables. No parent-child relationships.
 # One row per entity. SCD2 for change tracking.
-# ───────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 dimensions:
 
-  # ── dim_date ──────────────────────────────────────────────
+  # â”€â”€ dim_date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: dim_date
     type: flat
-    description: "Calendar date dimension — generated, not ingested"
+    description: "Calendar date dimension â€” generated, not ingested"
     source: generated
-    scd_type: 0  # Static — never changes
+    scd_type: 0  # Static â€” never changes
     grain: "One row per calendar date"
     business_key: [date_key]
     attributes:
@@ -96,12 +96,12 @@ dimensions:
         description: "UK fiscal year (Apr-Mar)"
         example: "FY2026-27"
 
-  # ── dim_weather_station ──────────────────────────────────
+  # â”€â”€ dim_weather_station â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: dim_weather_station
     type: flat
     description: "Weather observation grid points across NW England"
     source: rdl/weather
-    scd_type: 1  # Overwrite — stations don't change
+    scd_type: 1  # Overwrite â€” stations don't change
     grain: "One row per observation point"
     business_key: [point_id]
     attributes:
@@ -134,10 +134,10 @@ dimensions:
         dtype: string
         description: "FK to dim_location via map_postcode_to_location"
 
-  # ── dim_species ──────────────────────────────────────────
+  # â”€â”€ dim_species â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: dim_species
     type: flat
-    description: "Bird species reference — enriched from eBird taxonomy"
+    description: "Bird species reference â€” enriched from eBird taxonomy"
     source: rdl/nw-birds
     scd_type: 2
     grain: "One row per species"
@@ -181,7 +181,7 @@ dimensions:
         dtype: string
         description: "Best CC-licensed photo URL from Wikimedia"
 
-  # ── dim_company ──────────────────────────────────────────
+  # â”€â”€ dim_company â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: dim_company
     type: flat
     description: "UK companies from Companies House register"
@@ -232,15 +232,15 @@ dimensions:
         description: "Accounts filing overdue"
 
 
-# ── HIERARCHY DIMENSIONS ──────────────────────────────────
+# â”€â”€ HIERARCHY DIMENSIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Parent-child relationships with explicit level definitions.
 # Each level has its own attributes. Supports ragged hierarchies.
-# ──────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  # ── dim_location (HIERARCHY) ─────────────────────────────
+  # â”€â”€ dim_location (HIERARCHY) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: dim_location
     type: hierarchy
-    description: "UK geographic hierarchy — Country down to Postcode"
+    description: "UK geographic hierarchy â€” Country down to Postcode"
     source: rdl/postcodes
     scd_type: 2
     grain: "One row per leaf node (postcode) with denormalised ancestors"
@@ -358,10 +358,10 @@ dimensions:
         dtype: int8
         description: "IMD decile (1=most deprived, 10=least)"
 
-  # ── dim_airport (HIERARCHY) ──────────────────────────────
+  # â”€â”€ dim_airport (HIERARCHY) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: dim_airport
     type: hierarchy
-    description: "Aviation infrastructure hierarchy — Country to Runway"
+    description: "Aviation infrastructure hierarchy â€” Country to Runway"
     source: rdl/airports
     scd_type: 1
     grain: "One row per airport with denormalised hierarchy"
@@ -450,7 +450,7 @@ dimensions:
         dtype: string
         description: "FK to dim_location"
 
-  # ── dim_habitat (HIERARCHY) ──────────────────────────────
+  # â”€â”€ dim_habitat (HIERARCHY) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: dim_habitat
     type: hierarchy
     description: "UK habitat & landscape classification hierarchy"

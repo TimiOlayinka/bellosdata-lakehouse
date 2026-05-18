@@ -1,5 +1,5 @@
 """
-ODL Dimension Builder — YAML-Driven Dimension Materialiser
+ODL Dimension Builder â€” YAML-Driven Dimension Materialiser
 
 Reads dimension definitions from config/dimensions.yml and
 materialises both FLAT and HIERARCHY dims into Silver S3.
@@ -8,12 +8,12 @@ Triggered by upstream RDL Assets (postcodes, weather, airports, etc).
 Each dimension is built independently based on its YAML spec.
 
 Architecture:
-  config/dimensions.yml  →  This DAG reads specs
-  rdl/{source}/          →  This DAG reads raw data
-  odl/dim/{dim_name}/    →  This DAG writes typed Delta tables
+  config/dimensions.yml  â†’  This DAG reads specs
+  rdl/{source}/          â†’  This DAG reads raw data
+  odl/dim/{dim_name}/    â†’  This DAG writes typed Delta tables
 
 Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
-Constitutional basis: Cotrugli's Three Books — The Ledger must be clean.
+Constitutional basis: Cotrugli's Three Books â€” The Ledger must be clean.
 """
 
 from datetime import datetime, timedelta
@@ -25,16 +25,16 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-# ── Assets (inputs — RDL triggers) ──
-RDL_POSTCODES = Asset("s3://playdarch-bronze-raw/rdl/postcodes")
-RDL_WEATHER = Asset("s3://playdarch-bronze-raw/rdl/weather")
-RDL_AIRPORTS = Asset("s3://playdarch-bronze-raw/rdl/airports")
+# â”€â”€ Assets (inputs â€” RDL triggers) â”€â”€
+RDL_POSTCODES = Asset("s3://bellosdata-bronze-raw/rdl/postcodes")
+RDL_WEATHER = Asset("s3://bellosdata-bronze-raw/rdl/weather")
+RDL_AIRPORTS = Asset("s3://bellosdata-bronze-raw/rdl/airports")
 
-# ── Assets (outputs — ODL dims) ──
-ODL_DIM_LOCATION = Asset("s3://playdarch-silver-curated/odl/dim/dim_location")
-ODL_DIM_WEATHER_STATION = Asset("s3://playdarch-silver-curated/odl/dim/dim_weather_station")
-ODL_DIM_AIRPORT = Asset("s3://playdarch-silver-curated/odl/dim/dim_airport")
-ODL_DIM_DATE = Asset("s3://playdarch-silver-curated/odl/dim/dim_date")
+# â”€â”€ Assets (outputs â€” ODL dims) â”€â”€
+ODL_DIM_LOCATION = Asset("s3://bellosdata-silver-curated/odl/dim/dim_location")
+ODL_DIM_WEATHER_STATION = Asset("s3://bellosdata-silver-curated/odl/dim/dim_weather_station")
+ODL_DIM_AIRPORT = Asset("s3://bellosdata-silver-curated/odl/dim/dim_airport")
+ODL_DIM_DATE = Asset("s3://bellosdata-silver-curated/odl/dim/dim_date")
 
 # Config path
 CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config")
@@ -76,8 +76,8 @@ def odl_dim_builder():
     @task(outlets=[ODL_DIM_DATE])
     def build_dim_date() -> dict:
         """
-        Generate dim_date — a pure calendar dimension.
-        No RDL source needed — generated from date range.
+        Generate dim_date â€” a pure calendar dimension.
+        No RDL source needed â€” generated from date range.
         Follows spec from dimensions.yml.
         """
         from bellosdata_common import odl_write
@@ -90,7 +90,7 @@ def odl_dim_builder():
         rows = []
         start_year, end_year = 2025, 2027
 
-        # UK bank holidays (simplified — major ones)
+        # UK bank holidays (simplified â€” major ones)
         uk_bank_holidays_2026 = {
             "2026-01-01", "2026-04-03", "2026-04-06",
             "2026-05-04", "2026-05-25", "2026-08-31",
@@ -146,7 +146,7 @@ def odl_dim_builder():
     @task(outlets=[ODL_DIM_LOCATION])
     def build_dim_location() -> dict:
         """
-        Build dim_location — HIERARCHY dimension.
+        Build dim_location â€” HIERARCHY dimension.
         Reads RDL postcodes, denormalises the 6-level UK geography hierarchy.
         """
         from bellosdata_common import odl_write
@@ -169,7 +169,7 @@ def odl_dim_builder():
 
         try:
             dt = DeltaTable(
-                "s3://playdarch-bronze-raw/rdl/postcodes",
+                "s3://bellosdata-bronze-raw/rdl/postcodes",
                 storage_options=storage_options,
             )
             df = dt.to_pandas()
@@ -235,7 +235,7 @@ def odl_dim_builder():
     @task(outlets=[ODL_DIM_WEATHER_STATION])
     def build_dim_weather_station() -> dict:
         """
-        Build dim_weather_station — FLAT dimension.
+        Build dim_weather_station â€” FLAT dimension.
         Reads RDL weather to extract unique grid points.
         """
         from bellosdata_common import odl_write
@@ -257,7 +257,7 @@ def odl_dim_builder():
 
         try:
             dt = DeltaTable(
-                "s3://playdarch-bronze-raw/rdl/weather",
+                "s3://bellosdata-bronze-raw/rdl/weather",
                 storage_options=storage_options,
             )
             df = dt.to_pandas()
@@ -311,8 +311,8 @@ def odl_dim_builder():
     @task(outlets=[ODL_DIM_AIRPORT])
     def build_dim_airport() -> dict:
         """
-        Build dim_airport — HIERARCHY dimension.
-        Reads RDL airports, denormalises country→region→airport→runway.
+        Build dim_airport â€” HIERARCHY dimension.
+        Reads RDL airports, denormalises countryâ†’regionâ†’airportâ†’runway.
         """
         from bellosdata_common import odl_write
         from deltalake import DeltaTable
@@ -333,7 +333,7 @@ def odl_dim_builder():
 
         try:
             dt = DeltaTable(
-                "s3://playdarch-bronze-raw/rdl/airports",
+                "s3://bellosdata-bronze-raw/rdl/airports",
                 storage_options=storage_options,
             )
             df = dt.to_pandas()
@@ -341,7 +341,7 @@ def odl_dim_builder():
             logger.warning(f"No RDL airports found: {e}. Generating stub dim.")
             return odl_write("dim", "dim_airport", [])
 
-        # Parse records — airports and runways
+        # Parse records â€” airports and runways
         airports_raw = {}
         runways_by_airport = {}
 
@@ -361,7 +361,7 @@ def odl_dim_builder():
                 if apt:
                     runways_by_airport.setdefault(apt, []).append(record)
 
-        # Build dim rows — one per airport with denormalised hierarchy
+        # Build dim rows â€” one per airport with denormalised hierarchy
         rows = []
         sk = 1
 
@@ -415,7 +415,7 @@ def odl_dim_builder():
         logger.info(f"dim_airport: {result['record_count']} airports (HIERARCHY)")
         return result
 
-    # ── DAG Flow (all dims build in parallel) ──
+    # â”€â”€ DAG Flow (all dims build in parallel) â”€â”€
     build_dim_date()
     build_dim_location()
     build_dim_weather_station()

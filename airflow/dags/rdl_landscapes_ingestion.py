@@ -1,5 +1,5 @@
 """
-RDL Landscapes Ingestion — NW England Habitat & Landscape Pipeline
+RDL Landscapes Ingestion â€” NW England Habitat & Landscape Pipeline
 
 Sources (all free, no API key):
   - Natural England Open Data Portal (SSSIs, NNRs, AONBs)
@@ -7,7 +7,7 @@ Sources (all free, no API key):
   - NW England RSPB reserves (curated reference)
 
 Schedule: Quarterly (1st Jan/Apr/Jul/Oct at 05:00 UTC)
-RDL Output: s3://playdarch-bronze-raw/rdl/landscapes/
+RDL Output: s3://bellosdata-bronze-raw/rdl/landscapes/
 Asset: Triggers downstream ODL dim_habitat builder
 
 Author: Awujoo (AWUJOO-041 Phase 2) | Genesis: 2026-05-17
@@ -22,13 +22,13 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-RDL_LANDSCAPES_ASSET = Asset("s3://playdarch-bronze-raw/rdl/landscapes")
+RDL_LANDSCAPES_ASSET = Asset("s3://bellosdata-bronze-raw/rdl/landscapes")
 
 # NW England bounding box (same as used in bird/weather DAGs)
 NW_BBOX = {"lat_min": 53.0, "lat_max": 55.8, "lon_min": -3.6, "lon_max": -1.8}
 
-# ── NW England Protected Landscapes (curated reference data) ──
-# These are authoritative — manually compiled from Natural England / JNCC
+# â”€â”€ NW England Protected Landscapes (curated reference data) â”€â”€
+# These are authoritative â€” manually compiled from Natural England / JNCC
 NW_PROTECTED_SITES = [
     # National Parks
     {"name": "Lake District National Park", "designation": "National Park",
@@ -131,7 +131,7 @@ NW_PROTECTED_SITES = [
 
 @dag(
     dag_id="rdl_landscapes_ingestion",
-    description="Ingest NW England protected landscapes & habitats → RDL",
+    description="Ingest NW England protected landscapes & habitats â†’ RDL",
     schedule="0 5 1 1,4,7,10 *",  # Quarterly
     start_date=datetime(2026, 5, 17),
     catchup=False,
@@ -175,7 +175,7 @@ def rdl_landscapes_ingestion():
         enriched = curated_result.get("data", [])
         api_enrichments = 0
 
-        # Natural England SSSI API — try the GeoJSON endpoint
+        # Natural England SSSI API â€” try the GeoJSON endpoint
         sssi_geojson_url = (
             "https://services.arcgis.com/JJzESW51TqeY9uj9/arcgis/rest/services/"
             "Sites_of_Special_Scientific_Interest_England/FeatureServer/0/query"

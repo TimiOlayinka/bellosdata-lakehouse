@@ -1,12 +1,12 @@
 """
-RDL Weather Ingestion — Open-Meteo Weather Pipeline
+RDL Weather Ingestion â€” Open-Meteo Weather Pipeline
 
 Source: Open-Meteo API (completely free, no API key, unlimited requests)
 Ingests hourly weather for 8 NW England grid points.
 Captures: temp, precipitation, humidity, wind, cloud cover, visibility, UV.
 
 Schedule: Daily at 08:00 UTC
-RDL Output: s3://playdarch-bronze-raw/rdl/weather/
+RDL Output: s3://bellosdata-bronze-raw/rdl/weather/
 Asset: Triggers downstream ODL fact_weather_observation builder
 
 Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
@@ -21,10 +21,10 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-# ── Assets ──
-RDL_WEATHER_ASSET = Asset("s3://playdarch-bronze-raw/rdl/weather")
+# â”€â”€ Assets â”€â”€
+RDL_WEATHER_ASSET = Asset("s3://bellosdata-bronze-raw/rdl/weather")
 
-# ── NW England Grid Points ──
+# â”€â”€ NW England Grid Points â”€â”€
 NW_GRID_POINTS = {
     "manchester_city":    {"lat": 53.48, "lon": -2.24, "label": "Manchester City Centre"},
     "liverpool":          {"lat": 53.41, "lon": -2.98, "label": "Liverpool"},
@@ -50,7 +50,7 @@ OPEN_METEO_BASE = "https://api.open-meteo.com/v1/forecast"
 
 @dag(
     dag_id="rdl_weather_ingestion",
-    description="Ingest hourly weather for NW England grid (Open-Meteo → RDL)",
+    description="Ingest hourly weather for NW England grid (Open-Meteo â†’ RDL)",
     schedule="0 8 * * *",
     start_date=datetime(2026, 5, 17),
     catchup=False,
@@ -112,7 +112,7 @@ def rdl_weather_ingestion():
                     all_observations.append(obs)
 
                 logger.info(
-                    f"Weather: {point['label']} → {len(times)} hourly records"
+                    f"Weather: {point['label']} â†’ {len(times)} hourly records"
                 )
 
             except Exception as e:
@@ -150,7 +150,7 @@ def rdl_weather_ingestion():
         )
         return manifest
 
-    # ── DAG Flow ──
+    # â”€â”€ DAG Flow â”€â”€
     weather = ingest_weather_grid()
     write_to_rdl(weather)
 

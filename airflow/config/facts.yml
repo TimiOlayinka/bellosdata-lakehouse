@@ -1,20 +1,20 @@
-# ═══════════════════════════════════════════════════════════
-# BellosData Fact Table Registry — Measures & Events
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# BellosData Fact Table Registry â€” Measures & Events
 #
 # Fact tables store the measurable events of the business.
 # Each fact links to multiple dimensions via foreign keys.
 #
 # Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
-# ═══════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 version: "1.0"
 layer: "ODL"
-s3_bucket: "playdarch-silver-curated"
+s3_bucket: "bellosdata-silver-curated"
 s3_prefix: "odl/fact"
 
 facts:
 
-  # ── fact_weather_observation ─────────────────────────────
+  # â”€â”€ fact_weather_observation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: fact_weather_observation
     description: "Hourly weather observations across NW England grid"
     source_rdl: rdl/weather
@@ -34,11 +34,11 @@ facts:
     measures:
       - name: temperature_2m_c
         dtype: float32
-        unit: "°C"
+        unit: "Â°C"
         agg: avg
       - name: apparent_temperature_c
         dtype: float32
-        unit: "°C"
+        unit: "Â°C"
         agg: avg
       - name: relative_humidity_pct
         dtype: float32
@@ -89,7 +89,7 @@ facts:
         unit: "WMO code"
         agg: mode
 
-  # ── fact_wind_measurement ────────────────────────────────
+  # â”€â”€ fact_wind_measurement â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: fact_wind_measurement
     description: "Multi-height wind measurements for energy & aviation"
     source_rdl: rdl/wind
@@ -134,11 +134,11 @@ facts:
         agg: max
       - name: wind_power_density_80m_wm2
         dtype: float32
-        unit: "W/m²"
+        unit: "W/mÂ²"
         agg: avg
         description: "Estimated wind power density at hub height"
 
-  # ── fact_flight_movement ─────────────────────────────────
+  # â”€â”€ fact_flight_movement â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: fact_flight_movement
     description: "Aircraft position snapshots from ADS-B / OpenSky"
     source_rdl: rdl/private-jets
@@ -182,7 +182,7 @@ facts:
         dtype: float64
         agg: avg
 
-  # ── fact_company_filing ──────────────────────────────────
+  # â”€â”€ fact_company_filing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   - name: fact_company_filing
     description: "Companies House filing events for NW companies"
     source_rdl: rdl/companies

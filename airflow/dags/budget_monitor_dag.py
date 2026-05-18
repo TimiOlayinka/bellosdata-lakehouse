@@ -1,13 +1,13 @@
 """
-Budget Monitor DAG — The Watchman
+Budget Monitor DAG â€” The Watchman
 
-Checks AWS costs every 6 hours and alerts if the £50/month budget
+Checks AWS costs every 6 hours and alerts if the Â£50/month budget
 is at risk. Syncs budget status to S3 for cloud visibility.
 
 Schedule: Every 6 hours
 Author: Awujoo (AWUJOO-018)
 
-"A merchant who spends everything has no safety net." — PROTOCOL.md
+"A merchant who spends everything has no safety net." â€” PROTOCOL.md
 """
 
 from datetime import datetime, timedelta
@@ -19,16 +19,16 @@ from airflow.decorators import dag, task
 
 from aws_session import get_aws_session, is_cloud
 
-# ── Configuration ──────────────────────────────────────────────
+# â”€â”€ Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 ALERTS_DIR = "/tmp/bellosdata/alerts" if is_cloud() else r"X:\BellosData\alerts"
-S3_BUCKET = "playdarch-bronze-raw"
+S3_BUCKET = "bellosdata-bronze-raw"
 AWS_ACCOUNT_ID = "332779204498"
 
 # Budget thresholds
-BUDGET_LIMIT_USD = 63.0  # £50 ≈ $63
+BUDGET_LIMIT_USD = 63.0  # Â£50 â‰ˆ $63
 WARN_THRESHOLD = 0.60    # 60% = warning
 ALERT_THRESHOLD = 0.80   # 80% = alert
-CRITICAL_THRESHOLD = 0.95  # 95% = critical — halt all ops
+CRITICAL_THRESHOLD = 0.95  # 95% = critical â€” halt all ops
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ def budget_monitor():
 
         except Exception as e:
             logger.error(f"Cost Explorer query failed: {e}")
-            # Fall back to 0 — we'll catch real issues on the next run
+            # Fall back to 0 â€” we'll catch real issues on the next run
             current_spend_usd = 0.0
 
         spend_ratio = current_spend_usd / BUDGET_LIMIT_USD
@@ -109,7 +109,7 @@ def budget_monitor():
 
         logger.info(
             f"Budget: ${current_spend_usd:.2f} / ${BUDGET_LIMIT_USD:.2f} "
-            f"({spend_ratio * 100:.1f}%) — {status}"
+            f"({spend_ratio * 100:.1f}%) â€” {status}"
         )
 
         return budget_status
@@ -133,17 +133,17 @@ def budget_monitor():
                 f"BUDGET-{status}-{datetime.utcnow().strftime('%Y%m%d-%H%M')}.md",
             )
             with open(alert_file, "w", encoding="utf-8") as f:
-                f.write(f"# ⚠️ BUDGET {status}\n\n")
+                f.write(f"# âš ï¸ BUDGET {status}\n\n")
                 f.write(f"| Field | Value |\n|---|---|\n")
                 f.write(f"| Timestamp | {now_iso} |\n")
                 f.write(f"| Current Spend | ${budget_status['current_spend_usd']} |\n")
-                f.write(f"| Budget Limit | ${budget_status['budget_limit_usd']} (£{budget_status['budget_limit_gbp']}) |\n")
+                f.write(f"| Budget Limit | ${budget_status['budget_limit_usd']} (Â£{budget_status['budget_limit_gbp']}) |\n")
                 f.write(f"| Usage | {budget_status['spend_percentage']} |\n")
                 f.write(f"| Projected Month-End | ${budget_status['projected_month_end_usd']} |\n")
                 f.write(f"| Status | **{status}** |\n\n")
 
                 if status == "CRITICAL":
-                    f.write("> ⛔ **CRITICAL: Budget nearly exhausted. HALT ALL DEPLOYMENTS.**\n")
+                    f.write("> â›” **CRITICAL: Budget nearly exhausted. HALT ALL DEPLOYMENTS.**\n")
                     f.write("> File 'Need Advice' to the Merchant immediately.\n")
 
             logger.warning(f"Alert written: {alert_file}")
@@ -169,7 +169,7 @@ def budget_monitor():
         logger.info(f"Budget status synced to s3://{S3_BUCKET}/{s3_key}")
         return f"s3://{S3_BUCKET}/{s3_key}"
 
-    # ── DAG Flow ──────────────────────────────────────────
+    # â”€â”€ DAG Flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     status = check_aws_costs()
     evaluate_and_alert(status)
     sync_to_s3(status)

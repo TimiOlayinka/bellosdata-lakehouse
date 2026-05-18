@@ -1,5 +1,5 @@
 """
-Companies House Upload DAG — The First Trade Good
+Companies House Upload DAG â€” The First Trade Good
 
 Dedicated DAG for the 3.14 GB Companies House dataset.
 Uses S3 multipart upload for large files. Invoice-tracked.
@@ -20,11 +20,11 @@ import logging
 from airflow.decorators import dag, task
 from airflow.sdk import Asset
 
-# ── Assets ─────────────────────────────────────────────────────
-CH_ASSET = Asset("s3://playdarch-bronze-raw/companies-house")
+# â”€â”€ Assets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+CH_ASSET = Asset("s3://bellosdata-bronze-raw/companies-house")
 
-# ── Configuration ──────────────────────────────────────────────
-S3_BUCKET = "playdarch-bronze-raw"
+# â”€â”€ Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+S3_BUCKET = "bellosdata-bronze-raw"
 S3_PREFIX = "companies-house"
 from aws_session import get_aws_session
 SESSION_ID = "AWUJOO-024"
@@ -153,7 +153,7 @@ def companies_house_upload():
 
                 if abs(s3_size - local_size) < 1024:  # Allow small metadata overhead
                     invoice = complete_invoice(invoice)
-                    logger.info(f"✅ {ch_file['filename']} uploaded ({s3_size:,} bytes)")
+                    logger.info(f"âœ… {ch_file['filename']} uploaded ({s3_size:,} bytes)")
                 else:
                     invoice = fail_invoice(
                         invoice,
@@ -177,7 +177,7 @@ def companies_house_upload():
             dag_id="companies_house_upload",
         )
 
-    # ── DAG Flow ──────────────────────────────────────────
+    # â”€â”€ DAG Flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     invoices = create_invoices()
     results = execute_uploads(invoices)
     file_receipt(results)
@@ -190,7 +190,7 @@ def _multipart_upload(s3, filepath, s3_key, file_hash, now_iso, invoice):
     file_size = os.path.getsize(filepath)
     num_parts = (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE
 
-    logger.info(f"Multipart upload: {s3_key} — {file_size:,} bytes in {num_parts} parts")
+    logger.info(f"Multipart upload: {s3_key} â€” {file_size:,} bytes in {num_parts} parts")
 
     mpu = s3.create_multipart_upload(
         Bucket=S3_BUCKET,

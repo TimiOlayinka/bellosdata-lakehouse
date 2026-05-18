@@ -1,16 +1,16 @@
 """
-Ledger Cloud API — Lambda Function
+Ledger Cloud API â€” Lambda Function
 
 A lightweight read-only API that serves Merchant Ledger data from S3.
-This is the "cloud light" — when the local machine sleeps, this Lambda
+This is the "cloud light" â€” when the local machine sleeps, this Lambda
 keeps the books visible.
 
 Endpoints:
-  GET /ledger/status    — Latest sync block info
-  GET /ledger/compute   — compute-ledger.json
-  GET /ledger/shared    — shared.json
-  GET /ledger/routes    — Trade routes from shared.json
-  GET /ledger/blockchain — Full blockchain listing
+  GET /ledger/status    â€” Latest sync block info
+  GET /ledger/compute   â€” compute-ledger.json
+  GET /ledger/shared    â€” shared.json
+  GET /ledger/routes    â€” Trade routes from shared.json
+  GET /ledger/blockchain â€” Full blockchain listing
 
 Author: Awujoo (AWUJOO-018)
 """
@@ -19,7 +19,7 @@ import json
 import boto3
 import os
 
-S3_BUCKET = os.environ.get("S3_BUCKET", "playdarch-bronze-raw")
+S3_BUCKET = os.environ.get("S3_BUCKET", "bellosdata-bronze-raw")
 LEDGER_PREFIX = "ledger-live"
 BLOCKCHAIN_PREFIX = "blockchain"
 

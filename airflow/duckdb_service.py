@@ -1,11 +1,11 @@
 """
-BellosData DuckDB Query Service — Cloud SQL Console
+BellosData DuckDB Query Service â€” Cloud SQL Console
 
 A lightweight web-based SQL editor backed by DuckDB.
 Pre-configured with S3 Delta lake credentials and table views.
 
 Access: http://13.135.211.178:8082
-Cost: $0 — runs on existing Lightsail instance.
+Cost: $0 â€” runs on existing Lightsail instance.
 
 Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
 """
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-BRONZE = "s3://playdarch-bronze-raw"
-SILVER = "s3://playdarch-silver-curated"
+BRONZE = "s3://bellosdata-bronze-raw"
+SILVER = "s3://bellosdata-silver-curated"
 
 
 def get_db():
@@ -83,7 +83,7 @@ def get_db():
     return db
 
 
-# ── HTML Template ──
+# â”€â”€ HTML Template â”€â”€
 HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -229,7 +229,7 @@ HTML = """<!DOCTYPE html>
         {% endfor %}
       </div>
       <div class="section">
-        <div class="section-title">Silver — Dimensions</div>
+        <div class="section-title">Silver â€” Dimensions</div>
         {% for t in tables.dims %}
         <div class="tbl {{ 'has-data' if t.rows > 0 else '' }}"
              onclick="setQuery('SELECT * FROM {{ t.name }} LIMIT 20')">
@@ -238,7 +238,7 @@ HTML = """<!DOCTYPE html>
         {% endfor %}
       </div>
       <div class="section">
-        <div class="section-title">Silver — Facts</div>
+        <div class="section-title">Silver â€” Facts</div>
         {% for t in tables.facts %}
         <div class="tbl {{ 'has-data' if t.rows > 0 else '' }}"
              onclick="setQuery('SELECT * FROM {{ t.name }} LIMIT 20')">
@@ -247,7 +247,7 @@ HTML = """<!DOCTYPE html>
         {% endfor %}
       </div>
       <div class="section">
-        <div class="section-title">Silver — Mappings</div>
+        <div class="section-title">Silver â€” Mappings</div>
         {% for t in tables.maps %}
         <div class="tbl {{ 'has-data' if t.rows > 0 else '' }}"
              onclick="setQuery('SELECT * FROM {{ t.name }} LIMIT 20')">
@@ -272,7 +272,7 @@ HTML = """<!DOCTYPE html>
         <div class="example-btn" onclick="setQuery('SELECT json_extract_string(json, \'$.label\') AS station, AVG(CAST(json_extract_string(json, \'$.temperature_2m\') AS DOUBLE)) AS avg_temp FROM weather GROUP BY 1')">Avg Temp</div>
       </div>
       <div class="actions">
-        <button type="submit" class="btn-run">▶ Run Query</button>
+        <button type="submit" class="btn-run">â–¶ Run Query</button>
         <button type="button" class="btn-clear" onclick="document.getElementById('sql').value=''">Clear</button>
         {% if status %}
         <span class="status {{ 'ok' if not error else 'err' }}">{{ status }}</span>
@@ -288,7 +288,7 @@ HTML = """<!DOCTYPE html>
     </div>
     {% elif columns %}
     <div class="results">
-      <div class="results-bar">{{ row_count }} rows × {{ columns|length }} columns ({{ duration_ms }}ms)</div>
+      <div class="results-bar">{{ row_count }} rows Ã— {{ columns|length }} columns ({{ duration_ms }}ms)</div>
       <div class="table-scroll">
         <table>
           <thead><tr>{% for c in columns %}<th>{{ c }}</th>{% endfor %}</tr></thead>
@@ -391,7 +391,7 @@ def query():
 
 @app.route("/api/query", methods=["POST"])
 def api_query():
-    """JSON API endpoint — for IDE REST clients / curl / scripts."""
+    """JSON API endpoint â€” for IDE REST clients / curl / scripts."""
     import time
     data = request.get_json(force=True, silent=True) or {}
     sql = data.get("sql", request.form.get("sql", "")).strip()

@@ -1,5 +1,5 @@
 """
-ODL Mapping Builder — YAML-Driven Cross-Dimension Bridge Materialiser
+ODL Mapping Builder â€” YAML-Driven Cross-Dimension Bridge Materialiser
 
 Reads mapping definitions from config/mappings.yml and materialises
 bridge/link tables that connect dimensions in the ODL.
@@ -8,10 +8,10 @@ Triggered by upstream ODL dim Assets (dims must exist before mappings).
 Each mapping is built independently based on its YAML spec.
 
 Architecture:
-  config/mappings.yml    → This DAG reads specs
-  odl/dim/{dim}/         → This DAG reads dims for FK resolution
-  rdl/{source}/          → This DAG reads raw data for entity matching
-  odl/map/{map_name}/    → This DAG writes typed Delta tables
+  config/mappings.yml    â†’ This DAG reads specs
+  odl/dim/{dim}/         â†’ This DAG reads dims for FK resolution
+  rdl/{source}/          â†’ This DAG reads raw data for entity matching
+  odl/map/{map_name}/    â†’ This DAG writes typed Delta tables
 
 Author: Awujoo (AWUJOO-041 Phase 2) | Genesis: 2026-05-17
 """
@@ -26,18 +26,18 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-# Input Assets — ODL dims
-ODL_DIM_LOCATION = Asset("s3://playdarch-silver-curated/odl/dim/dim_location")
-ODL_DIM_WEATHER_STATION = Asset("s3://playdarch-silver-curated/odl/dim/dim_weather_station")
-ODL_DIM_AIRPORT = Asset("s3://playdarch-silver-curated/odl/dim/dim_airport")
+# Input Assets â€” ODL dims
+ODL_DIM_LOCATION = Asset("s3://bellosdata-silver-curated/odl/dim/dim_location")
+ODL_DIM_WEATHER_STATION = Asset("s3://bellosdata-silver-curated/odl/dim/dim_weather_station")
+ODL_DIM_AIRPORT = Asset("s3://bellosdata-silver-curated/odl/dim/dim_airport")
 
 # Output Assets
-ODL_MAP_POSTCODE = Asset("s3://playdarch-silver-curated/odl/map/map_postcode_to_location")
-ODL_MAP_COMPANY = Asset("s3://playdarch-silver-curated/odl/map/map_company_to_postcode")
-ODL_MAP_AIRPORT = Asset("s3://playdarch-silver-curated/odl/map/map_airport_to_location")
-ODL_MAP_SPECIES = Asset("s3://playdarch-silver-curated/odl/map/map_species_to_habitat")
-ODL_MAP_OWNER = Asset("s3://playdarch-silver-curated/odl/map/map_owner_to_company")
-ODL_MAP_STATION = Asset("s3://playdarch-silver-curated/odl/map/map_station_to_location")
+ODL_MAP_POSTCODE = Asset("s3://bellosdata-silver-curated/odl/map/map_postcode_to_location")
+ODL_MAP_COMPANY = Asset("s3://bellosdata-silver-curated/odl/map/map_company_to_postcode")
+ODL_MAP_AIRPORT = Asset("s3://bellosdata-silver-curated/odl/map/map_airport_to_location")
+ODL_MAP_SPECIES = Asset("s3://bellosdata-silver-curated/odl/map/map_species_to_habitat")
+ODL_MAP_OWNER = Asset("s3://bellosdata-silver-curated/odl/map/map_owner_to_company")
+ODL_MAP_STATION = Asset("s3://bellosdata-silver-curated/odl/map/map_station_to_location")
 
 CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config")
 
@@ -58,7 +58,7 @@ def _read_rdl(source_path):
     if creds.token:
         opts["AWS_SESSION_TOKEN"] = creds.token
     try:
-        dt = DeltaTable(f"s3://playdarch-bronze-raw/{source_path}", storage_options=opts)
+        dt = DeltaTable(f"s3://bellosdata-bronze-raw/{source_path}", storage_options=opts)
         df = dt.to_pandas()
         records = []
         for _, row in df.iterrows():
@@ -82,7 +82,7 @@ def _read_odl_dim(dim_name):
     if creds.token:
         opts["AWS_SESSION_TOKEN"] = creds.token
     try:
-        path = f"s3://playdarch-silver-curated/odl/dim/{dim_name}"
+        path = f"s3://bellosdata-silver-curated/odl/dim/{dim_name}"
         dt = DeltaTable(path, storage_options=opts)
         return dt.to_pandas().to_dict("records")
     except Exception as e:
@@ -118,7 +118,7 @@ def odl_mapping_builder():
 
     @task(outlets=[ODL_MAP_POSTCODE])
     def build_map_postcode_to_location():
-        """Build postcode → location SK mapping from dim_location."""
+        """Build postcode â†’ location SK mapping from dim_location."""
         from bellosdata_common import odl_write
         dim_data = _read_odl_dim("dim_location")
         if not dim_data:
@@ -143,7 +143,7 @@ def odl_mapping_builder():
 
     @task(outlets=[ODL_MAP_COMPANY])
     def build_map_company_to_postcode():
-        """Build company → postcode mapping from RDL companies."""
+        """Build company â†’ postcode mapping from RDL companies."""
         from bellosdata_common import odl_write
         records = _read_rdl("rdl/companies")
         if not records:
@@ -171,7 +171,7 @@ def odl_mapping_builder():
 
     @task(outlets=[ODL_MAP_AIRPORT])
     def build_map_airport_to_location():
-        """Build airport → nearest postcode mapping using haversine."""
+        """Build airport â†’ nearest postcode mapping using haversine."""
         from bellosdata_common import odl_write
         airports = _read_odl_dim("dim_airport")
         locations = _read_odl_dim("dim_location")
@@ -215,7 +215,7 @@ def odl_mapping_builder():
 
     @task(outlets=[ODL_MAP_SPECIES])
     def build_map_species_to_habitat():
-        """Build species → habitat mapping from RDL birds + landscapes."""
+        """Build species â†’ habitat mapping from RDL birds + landscapes."""
         from bellosdata_common import odl_write
 
         birds = _read_rdl("rdl/nw-birds")
@@ -279,7 +279,7 @@ def odl_mapping_builder():
 
     @task(outlets=[ODL_MAP_OWNER])
     def build_map_owner_to_company():
-        """Build jet owner → company mapping using fuzzy string matching."""
+        """Build jet owner â†’ company mapping using fuzzy string matching."""
         from bellosdata_common import odl_write
 
         jets = _read_rdl("rdl/private-jets")
@@ -340,7 +340,7 @@ def odl_mapping_builder():
 
     @task(outlets=[ODL_MAP_STATION])
     def build_map_station_to_location():
-        """Build weather station → nearest postcode mapping."""
+        """Build weather station â†’ nearest postcode mapping."""
         from bellosdata_common import odl_write
         stations = _read_odl_dim("dim_weather_station")
         locations = _read_odl_dim("dim_location")

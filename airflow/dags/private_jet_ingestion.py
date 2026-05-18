@@ -1,5 +1,5 @@
 """
-Private Jet Fleet Intelligence — CAA & ADS-B Ingestion Pipeline
+Private Jet Fleet Intelligence â€” CAA & ADS-B Ingestion Pipeline
 
 Ingests UK private jet data from:
 1. CAA G-INFO Aircraft Register (public CSV)
@@ -11,7 +11,7 @@ Schedule: Weekly (data doesn't change daily)
 Author: Awujoo (AWUJOO-028)
 Genesis: 2026-05-16
 
-Trade Route: TR-001 — Private Jet Fleet Intelligence
+Trade Route: TR-001 â€” Private Jet Fleet Intelligence
 """
 
 from datetime import datetime, timedelta
@@ -25,11 +25,11 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-# ── Assets ─────────────────────────────────────────────────
-PRIVATE_JET_BRONZE = Asset("s3://playdarch-bronze-raw/private-jets")
+# â”€â”€ Assets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+PRIVATE_JET_BRONZE = Asset("s3://bellosdata-bronze-raw/private-jets")
 
-# ── Configuration ──────────────────────────────────────────
-S3_BUCKET = "playdarch-bronze-raw"
+# â”€â”€ Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+S3_BUCKET = "bellosdata-bronze-raw"
 S3_PREFIX = "private-jets"
 from aws_session import get_aws_session, AWS_REGION
 REGION = AWS_REGION
@@ -298,7 +298,7 @@ def private_jet_ingestion():
                 "delta_table": caa_path,
                 "records": caa_result["records"],
             }
-            logger.info(f"Wrote {caa_result['records']} CAA records → {caa_path} (Delta)")
+            logger.info(f"Wrote {caa_result['records']} CAA records â†’ {caa_path} (Delta)")
 
         # Write OpenSky traffic data as Delta table
         if opensky_result.get("status") == "OK" and opensky_result.get("data"):
@@ -314,9 +314,9 @@ def private_jet_ingestion():
                 "delta_table": osky_path,
                 "records": opensky_result["records"],
             }
-            logger.info(f"Wrote {opensky_result['records']} OpenSky records → {osky_path} (Delta)")
+            logger.info(f"Wrote {opensky_result['records']} OpenSky records â†’ {osky_path} (Delta)")
 
-        # Write ingestion manifest (JSON — metadata, not governed data)
+        # Write ingestion manifest (JSON â€” metadata, not governed data)
         manifest = {
             "ingestion_id": f"PJ-{ts_str}",
             "timestamp": now.isoformat() + "Z",
@@ -340,7 +340,7 @@ def private_jet_ingestion():
 
         return manifest
 
-    # ── DAG Flow ──────────────────────────────────────────
+    # â”€â”€ DAG Flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     caa_data = ingest_caa_register()
     opensky_data = ingest_opensky_nw_traffic()
     write_to_bronze(caa_data, opensky_data)

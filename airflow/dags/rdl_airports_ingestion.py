@@ -1,12 +1,12 @@
 """
-RDL Airports Ingestion — UK Airport & Runway Pipeline
+RDL Airports Ingestion â€” UK Airport & Runway Pipeline
 
-Source: OurAirports (ourairports.com/data/) — Free CSV, Public Domain
+Source: OurAirports (ourairports.com/data/) â€” Free CSV, Public Domain
 Ingests all UK airports with ICAO/IATA codes, coordinates, elevation,
 runways, frequencies, and navaids. Focus on NW England for TR-001 jets.
 
 Schedule: Monthly (1st of month at 04:00 UTC)
-RDL Output: s3://playdarch-bronze-raw/rdl/airports/
+RDL Output: s3://bellosdata-bronze-raw/rdl/airports/
 Asset: Triggers downstream ODL dim_airport builder
 
 Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
@@ -21,10 +21,10 @@ from airflow.sdk import Asset, dag, task
 
 logger = logging.getLogger(__name__)
 
-# ── Assets ──
-RDL_AIRPORTS_ASSET = Asset("s3://playdarch-bronze-raw/rdl/airports")
+# â”€â”€ Assets â”€â”€
+RDL_AIRPORTS_ASSET = Asset("s3://bellosdata-bronze-raw/rdl/airports")
 
-# ── OurAirports Data URLs (Public Domain CSV) ──
+# â”€â”€ OurAirports Data URLs (Public Domain CSV) â”€â”€
 OURAIRPORTS_BASE = "https://davidmegginson.github.io/ourairports-data"
 AIRPORTS_CSV = f"{OURAIRPORTS_BASE}/airports.csv"
 RUNWAYS_CSV = f"{OURAIRPORTS_BASE}/runways.csv"
@@ -55,7 +55,7 @@ NW_KEY_AIRPORTS = [
 
 @dag(
     dag_id="rdl_airports_ingestion",
-    description="Ingest UK airports, runways, frequencies from OurAirports → RDL",
+    description="Ingest UK airports, runways, frequencies from OurAirports â†’ RDL",
     schedule="0 4 1 * *",
     start_date=datetime(2026, 5, 17),
     catchup=False,
@@ -143,7 +143,7 @@ def rdl_airports_ingestion():
             ref = row.get("airport_ref", "")
             ident = row.get("airport_ident", "")
 
-            # We'll include all — the ODL layer will join/filter
+            # We'll include all â€” the ODL layer will join/filter
             uk_runways.append({
                 "id": row.get("id"),
                 "airport_ref": ref,
@@ -228,7 +228,7 @@ def rdl_airports_ingestion():
         )
         return manifest
 
-    # ── DAG Flow (parallel ingestion → single RDL write) ──
+    # â”€â”€ DAG Flow (parallel ingestion â†’ single RDL write) â”€â”€
     ap = ingest_airports()
     rw = ingest_runways()
     fq = ingest_frequencies()

@@ -1,0 +1,72 @@
+# ─────────────────────────────────────────────────────────────────
+# S3 → Redshift Copy Job Configuration
+# To add a new brand/dataset, just add an entry under the right source.
+# ─────────────────────────────────────────────────────────────────
+
+settings:
+  bucket: hnb-dns-rdl-staging
+  iam_role: ${REDSHIFT_IAM_ROLE}
+  workgroup: bellosdata
+  database: hnb_dwh
+  region: eu-west-2
+
+sources:
+
+  # ── HNB Commerce (Custom Platform) ──────────────────────────
+  hnb_commerce:
+    schema: rdl_hnb_commerce
+    brands:
+      hnb:
+        datasets: [customers, products, orders, order_items]
+      hnb_man:
+        datasets: [customers, products, orders, order_items]
+
+  # ── Salesforce Commerce Cloud (PLT) ────────────────────────────
+  salesforce_commerce:
+    schema: rdl_salesforce_commerce
+    prefix: plt
+    brands:
+      prettylittlething:
+        datasets: [customers, products, orders, order_items]
+
+  # ── Shopify (NastyGal) ─────────────────────────────────────────
+  shopify:
+    schema: rdl_shopify
+    brands:
+      nastygal:
+        datasets: [customers, products, orders, order_items]
+
+  # ── Magento (Karen Millen & Coast) ─────────────────────────────
+  magento:
+    schema: rdl_magento
+    brands:
+      karen_millen:
+        datasets: [customers, products, orders, order_items]
+      coast:
+        datasets: [customers, products, orders, order_items]
+
+  # ── Oracle Commerce (Debenhams) ────────────────────────────────
+  oracle_commerce:
+    schema: rdl_oracle_commerce
+    brands:
+      debenhams:
+        datasets: [customers, products, orders, order_items]
+
+  # ── Marketing Channels ─────────────────────────────────────────
+  marketing:
+    schema: rdl_marketing
+    brands:
+      hnb:
+        datasets: [meta_ads, google_ads, tiktok_ads, ga4_sessions, email_campaigns, influencer_posts]
+      hnb_man:
+        datasets: [meta_ads, google_ads, tiktok_ads, ga4_sessions, email_campaigns, influencer_posts]
+      prettylittlething:
+        datasets: [meta_ads, google_ads, tiktok_ads, ga4_sessions, email_campaigns, influencer_posts]
+      nastygal:
+        datasets: [meta_ads, google_ads, tiktok_ads, ga4_sessions, email_campaigns, influencer_posts]
+      karen_millen:
+        datasets: [meta_ads, google_ads, tiktok_ads, ga4_sessions, email_campaigns, influencer_posts]
+      coast:
+        datasets: [meta_ads, google_ads, tiktok_ads, ga4_sessions, email_campaigns, influencer_posts]
+      debenhams:
+        datasets: [meta_ads, google_ads, tiktok_ads, ga4_sessions, email_campaigns, influencer_posts]

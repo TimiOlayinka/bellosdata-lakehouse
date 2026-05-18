@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+crash.log
+tfplan
+
+# Airflow
+airflow/logs/
+airflow/*.db
+airflow/*.duckdb
+airflow/webserver_config.py
+
+# Environment
+.env
+*.pem
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Lambda build
+*.zip
+!lambda/ledger_api.zip

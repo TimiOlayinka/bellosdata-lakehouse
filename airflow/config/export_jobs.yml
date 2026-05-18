@@ -1,0 +1,67 @@
+# ─────────────────────────────────────────────────────────────────
+# Redshift → S3 Parquet Export Configuration
+# Each model maps to an UNLOAD SQL statement.
+# The DAG reads this file and submits each SQL to Redshift Data API.
+# ─────────────────────────────────────────────────────────────────
+
+settings:
+  workgroup: bellosdata
+  database: hnb_dwh
+  iam_role: ${REDSHIFT_IAM_ROLE}
+  s3_bucket: hnb-data-quality-staging
+  region: eu-west-2
+
+exports:
+
+  # ── RDL Layer ──────────────────────────────────────────────────
+  rdl:
+    models:
+      - schema: rdl_zendesk
+        tables: [rdl_tickets, rdl_agents, rdl_teams, rdl_ticket_interactions]
+        filter: ""
+
+      - schema: rdl_qualtrics
+        tables: [rdl_blnx_survey, rdl_nps_visitview]
+        filter: ""
+
+      - schema: rdl_manhattan
+        tables: [rdl_warehouse_status, rdl_basket_items]
+        filter: ""
+
+      - schema: rdl_metapack
+        tables: [rdl_parcel_events, rdl_delivery_order, rdl_delivery_item, rdl_digital_refunds]
+        filter: ""
+
+      - schema: rdl_hnb_commerce
+        tables: [rdl_customer_otif, rdl_customer_otif_cc, rdl_postship_defect]
+        filter: ""
+
+  # ── ODL Layer ──────────────────────────────────────────────────
+  odl:
+    models:
+      - schema: odl
+        tables:
+          - dim_tickets
+          - dim_agents
+          - dim_teams
+          - fact_ticket_interactions
+          - fact_ticket_blnx_survey
+          - fact_nps_visitview
+          - fact_basket_warehouse_status
+          - fact_parcel_events
+          - fact_customer_otif
+          - fact_customer_otif_cc
+          - fact_postship_defect
+          - fact_digital_refunds
+          - fact_delivery_order
+          - fact_delivery_item
+          - fact_basket_items
+
+  # ── ADL Layer ──────────────────────────────────────────────────
+  adl:
+    models:
+      - schema: bi
+        tables:
+          - fact_cx_nps_summary
+          - fact_delivery_performance
+          - fact_ticket_resolution

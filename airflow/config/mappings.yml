@@ -1,0 +1,166 @@
+# ═══════════════════════════════════════════════════════════
+# BellosData Mapping Table Registry — Bridge/Link Configuration
+#
+# Mapping tables bridge dimensions together. They resolve
+# many-to-many and cross-domain relationships in the ODL.
+#
+# The ODL builder reads this alongside dimensions.yml
+# to construct map_* Delta tables in Silver S3.
+#
+# Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
+# ═══════════════════════════════════════════════════════════
+
+version: "1.0"
+layer: "ODL"
+s3_bucket: "playdarch-silver-curated"
+s3_prefix: "odl/map"
+
+mappings:
+
+  # ── Postcode → Location ──────────────────────────────────
+  - name: map_postcode_to_location
+    description: "Links every postcode to its dim_location surrogate key"
+    type: one_to_one
+    source_dim: dim_location
+    target_dim: dim_location
+    source_key: postcode
+    target_key: location_sk
+    source_rdl: rdl/postcodes
+    attributes:
+      - name: postcode
+        dtype: string
+        description: "Full UK postcode"
+      - name: location_sk
+        dtype: int32
+        description: "FK to dim_location"
+      - name: outcode
+        dtype: string
+        description: "Outward postcode half"
+      - name: latitude
+        dtype: float64
+      - name: longitude
+        dtype: float64
+
+  # ── Company → Postcode ───────────────────────────────────
+  - name: map_company_to_postcode
+    description: "Links companies to their registered address postcode"
+    type: many_to_one
+    source_dim: dim_company
+    target_dim: dim_location
+    source_key: company_number
+    target_key: postcode
+    source_rdl: rdl/companies
+    attributes:
+      - name: company_number
+        dtype: string
+        description: "Companies House number"
+      - name: company_name
+        dtype: string
+      - name: registered_postcode
+        dtype: string
+        description: "FK to dim_location via postcode"
+      - name: sic_codes
+        dtype: string
+      - name: company_status
+        dtype: string
+
+  # ── Airport → Location ───────────────────────────────────
+  - name: map_airport_to_location
+    description: "Links airports to their nearest postcode/location"
+    type: one_to_one
+    source_dim: dim_airport
+    target_dim: dim_location
+    source_key: icao_code
+    target_key: postcode
+    source_rdl: rdl/airports
+    attributes:
+      - name: icao_code
+        dtype: string
+        description: "ICAO airport code"
+      - name: airport_name
+        dtype: string
+      - name: nearest_postcode
+        dtype: string
+        description: "FK to dim_location"
+      - name: latitude_deg
+        dtype: float64
+      - name: longitude_deg
+        dtype: float64
+      - name: distance_km
+        dtype: float32
+        description: "Distance to postcode centroid"
+
+  # ── Species → Habitat ────────────────────────────────────
+  - name: map_species_to_habitat
+    description: "Links bird species to their typical habitat types"
+    type: many_to_many
+    source_dim: dim_species
+    target_dim: dim_habitat
+    source_key: species_code
+    target_key: habitat_id
+    source_rdl: rdl/nw-birds
+    attributes:
+      - name: species_code
+        dtype: string
+        description: "eBird species code"
+      - name: common_name
+        dtype: string
+      - name: habitat_id
+        dtype: string
+        description: "FK to dim_habitat"
+      - name: habitat_name
+        dtype: string
+      - name: affinity
+        dtype: string
+        description: "primary, secondary, occasional"
+      - name: season
+        dtype: string
+        description: "all_year, breeding, winter, passage"
+
+  # ── Jet Owner → Company ──────────────────────────────────
+  - name: map_owner_to_company
+    description: "Links CAA registered jet owners to Companies House records"
+    type: many_to_one
+    source_dim: dim_airport  # owner comes from jet data context
+    target_dim: dim_company
+    source_key: registered_owner
+    target_key: company_number
+    source_rdl: rdl/private-jets
+    resolution_strategy: fuzzy_match  # Owner names vs company names
+    attributes:
+      - name: registered_owner
+        dtype: string
+        description: "CAA registered owner string"
+      - name: company_number
+        dtype: string
+        description: "FK to dim_company (matched)"
+      - name: company_name
+        dtype: string
+        description: "Matched Companies House name"
+      - name: match_confidence
+        dtype: float32
+        description: "Fuzzy match score (0-1)"
+      - name: match_method
+        dtype: string
+        description: "exact, fuzzy, manual"
+
+  # ── Weather Station → Location ───────────────────────────
+  - name: map_station_to_location
+    description: "Links weather grid points to nearest postcode"
+    type: one_to_one
+    source_dim: dim_weather_station
+    target_dim: dim_location
+    source_key: point_id
+    target_key: postcode
+    source_rdl: rdl/weather
+    attributes:
+      - name: point_id
+        dtype: string
+        description: "Weather station point ID"
+      - name: label
+        dtype: string
+      - name: nearest_postcode
+        dtype: string
+        description: "FK to dim_location"
+      - name: distance_km
+        dtype: float32

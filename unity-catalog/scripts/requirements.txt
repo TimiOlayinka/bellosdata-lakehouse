@@ -1,0 +1,2 @@
+# Unity Catalog table registration — no external deps needed
+# Uses only stdlib (urllib, json)

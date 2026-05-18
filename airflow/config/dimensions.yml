@@ -1,0 +1,526 @@
+# ═══════════════════════════════════════════════════════════
+# BellosData Dimension Registry — Master Configuration
+#
+# This file defines ALL dimensions in the ODL (Operational Data Layer).
+# Each dimension is either FLAT (simple lookup) or HIERARCHY (parent-child).
+#
+# The ODL dim builder reads this registry and constructs Delta tables
+# in s3://playdarch-silver-curated/odl/dim/{dim_name}/
+#
+# Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
+# ═══════════════════════════════════════════════════════════
+
+version: "1.0"
+layer: "ODL"
+s3_bucket: "playdarch-silver-curated"
+s3_prefix: "odl/dim"
+default_scd_type: 2
+default_format: "delta"
+
+# ── FLAT DIMENSIONS ────────────────────────────────────────
+# Simple lookup tables. No parent-child relationships.
+# One row per entity. SCD2 for change tracking.
+# ───────────────────────────────────────────────────────────
+
+dimensions:
+
+  # ── dim_date ──────────────────────────────────────────────
+  - name: dim_date
+    type: flat
+    description: "Calendar date dimension — generated, not ingested"
+    source: generated
+    scd_type: 0  # Static — never changes
+    grain: "One row per calendar date"
+    business_key: [date_key]
+    attributes:
+      - name: date_key
+        dtype: int32
+        description: "Surrogate key (YYYYMMDD format)"
+        example: 20260517
+      - name: full_date
+        dtype: date
+        description: "ISO date"
+        example: "2026-05-17"
+      - name: day_of_week
+        dtype: string
+        description: "Day name"
+        example: "Saturday"
+      - name: day_of_week_num
+        dtype: int8
+        description: "1=Monday, 7=Sunday (ISO)"
+        example: 6
+      - name: day_of_month
+        dtype: int8
+        description: "Day number in month"
+        example: 17
+      - name: day_of_year
+        dtype: int16
+        description: "Day number in year"
+        example: 137
+      - name: week_of_year
+        dtype: int8
+        description: "ISO week number"
+        example: 20
+      - name: month_num
+        dtype: int8
+        description: "Month number"
+        example: 5
+      - name: month_name
+        dtype: string
+        description: "Month name"
+        example: "May"
+      - name: quarter
+        dtype: int8
+        description: "Quarter (1-4)"
+        example: 2
+      - name: quarter_name
+        dtype: string
+        description: "Quarter label"
+        example: "Q2"
+      - name: year
+        dtype: int16
+        description: "Calendar year"
+        example: 2026
+      - name: is_weekend
+        dtype: bool
+        description: "Saturday or Sunday"
+      - name: is_bank_holiday
+        dtype: bool
+        description: "UK bank holiday flag"
+      - name: season
+        dtype: string
+        description: "Meteorological season"
+        example: "Spring"
+      - name: fiscal_year
+        dtype: string
+        description: "UK fiscal year (Apr-Mar)"
+        example: "FY2026-27"
+
+  # ── dim_weather_station ──────────────────────────────────
+  - name: dim_weather_station
+    type: flat
+    description: "Weather observation grid points across NW England"
+    source: rdl/weather
+    scd_type: 1  # Overwrite — stations don't change
+    grain: "One row per observation point"
+    business_key: [point_id]
+    attributes:
+      - name: station_sk
+        dtype: int32
+        description: "Surrogate key"
+      - name: point_id
+        dtype: string
+        description: "Internal point identifier"
+        example: "manchester_city"
+      - name: label
+        dtype: string
+        description: "Human-readable name"
+        example: "Manchester City Centre"
+      - name: latitude
+        dtype: float64
+        description: "WGS84 latitude"
+        example: 53.48
+      - name: longitude
+        dtype: float64
+        description: "WGS84 longitude"
+        example: -2.24
+      - name: elevation_m
+        dtype: float32
+        description: "Elevation in metres"
+      - name: station_type
+        dtype: string
+        description: "Category: urban, coastal, aviation, elevated"
+      - name: nearest_postcode
+        dtype: string
+        description: "FK to dim_location via map_postcode_to_location"
+
+  # ── dim_species ──────────────────────────────────────────
+  - name: dim_species
+    type: flat
+    description: "Bird species reference — enriched from eBird taxonomy"
+    source: rdl/nw-birds
+    scd_type: 2
+    grain: "One row per species"
+    business_key: [species_code]
+    attributes:
+      - name: species_sk
+        dtype: int32
+        description: "Surrogate key"
+      - name: species_code
+        dtype: string
+        description: "eBird species code"
+        example: "eurbit1"
+      - name: common_name
+        dtype: string
+        description: "English common name"
+        example: "Eurasian Bittern"
+      - name: scientific_name
+        dtype: string
+        description: "Binomial name"
+        example: "Botaurus stellaris"
+      - name: family
+        dtype: string
+        description: "Taxonomic family"
+        example: "Ardeidae"
+      - name: order_name
+        dtype: string
+        description: "Taxonomic order"
+        example: "Pelecaniformes"
+      - name: conservation_status
+        dtype: string
+        description: "IUCN/BoCC status"
+        example: "Red"
+      - name: is_nw_signature
+        dtype: bool
+        description: "One of the 20 NW signature species"
+      - name: typical_habitat
+        dtype: string
+        description: "Primary habitat type"
+        example: "Wetland/Reedbed"
+      - name: photo_url
+        dtype: string
+        description: "Best CC-licensed photo URL from Wikimedia"
+
+  # ── dim_company ──────────────────────────────────────────
+  - name: dim_company
+    type: flat
+    description: "UK companies from Companies House register"
+    source: rdl/companies
+    scd_type: 2
+    grain: "One row per company per version"
+    business_key: [company_number]
+    attributes:
+      - name: company_sk
+        dtype: int32
+        description: "Surrogate key"
+      - name: company_number
+        dtype: string
+        description: "Companies House number"
+        example: "12345678"
+      - name: company_name
+        dtype: string
+        description: "Registered name"
+      - name: company_status
+        dtype: string
+        description: "active, dissolved, liquidation, etc."
+      - name: company_type
+        dtype: string
+        description: "ltd, plc, llp, etc."
+      - name: sic_codes
+        dtype: string
+        description: "Comma-separated SIC codes"
+      - name: sic_description
+        dtype: string
+        description: "Primary SIC description"
+      - name: incorporation_date
+        dtype: date
+        description: "Date of incorporation"
+      - name: registered_postcode
+        dtype: string
+        description: "FK to dim_location"
+      - name: country_of_origin
+        dtype: string
+        description: "Country of registration"
+      - name: has_charges
+        dtype: bool
+        description: "Has outstanding charges"
+      - name: has_insolvency_history
+        dtype: bool
+        description: "Has insolvency events"
+      - name: accounts_overdue
+        dtype: bool
+        description: "Accounts filing overdue"
+
+
+# ── HIERARCHY DIMENSIONS ──────────────────────────────────
+# Parent-child relationships with explicit level definitions.
+# Each level has its own attributes. Supports ragged hierarchies.
+# ──────────────────────────────────────────────────────────
+
+  # ── dim_location (HIERARCHY) ─────────────────────────────
+  - name: dim_location
+    type: hierarchy
+    description: "UK geographic hierarchy — Country down to Postcode"
+    source: rdl/postcodes
+    scd_type: 2
+    grain: "One row per leaf node (postcode) with denormalised ancestors"
+    business_key: [postcode]
+    hierarchy:
+      name: "uk_geography"
+      description: "UK administrative geography hierarchy"
+      levels:
+        - level: 1
+          name: country
+          id_field: country_code
+          name_field: country_name
+          description: "Nation (England, Scotland, Wales, NI)"
+          example: "England"
+
+        - level: 2
+          name: region
+          id_field: region_code
+          name_field: region_name
+          parent_id_field: country_code
+          description: "English region / devolved nation"
+          example: "North West"
+
+        - level: 3
+          name: county
+          id_field: admin_county_code
+          name_field: admin_county
+          parent_id_field: region_code
+          description: "Administrative or ceremonial county"
+          example: "Lancashire"
+
+        - level: 4
+          name: district
+          id_field: admin_district_code
+          name_field: admin_district
+          parent_id_field: admin_county_code
+          description: "Local authority district / metropolitan borough"
+          example: "Manchester"
+
+        - level: 5
+          name: ward
+          id_field: admin_ward_code
+          name_field: admin_ward
+          parent_id_field: admin_district_code
+          description: "Electoral ward"
+          example: "Piccadilly"
+
+        - level: 6
+          name: postcode
+          id_field: postcode
+          name_field: postcode
+          parent_id_field: admin_ward_code
+          description: "Full UK postcode (leaf node)"
+          example: "M1 1AA"
+
+    # Leaf-level attributes (attached to the postcode grain)
+    attributes:
+      - name: location_sk
+        dtype: int32
+        description: "Surrogate key"
+      - name: postcode
+        dtype: string
+        description: "Full UK postcode"
+      - name: outcode
+        dtype: string
+        description: "Outward code (first half)"
+      - name: incode
+        dtype: string
+        description: "Inward code (second half)"
+      - name: latitude
+        dtype: float64
+        description: "WGS84 centroid latitude"
+      - name: longitude
+        dtype: float64
+        description: "WGS84 centroid longitude"
+      - name: eastings
+        dtype: int32
+        description: "OS National Grid easting"
+      - name: northings
+        dtype: int32
+        description: "OS National Grid northing"
+      - name: country_name
+        dtype: string
+      - name: region_name
+        dtype: string
+      - name: admin_county
+        dtype: string
+      - name: admin_district
+        dtype: string
+      - name: admin_ward
+        dtype: string
+      - name: parish
+        dtype: string
+      - name: parliamentary_constituency
+        dtype: string
+      - name: lsoa
+        dtype: string
+        description: "Lower Super Output Area"
+      - name: msoa
+        dtype: string
+        description: "Middle Super Output Area"
+      - name: ccg
+        dtype: string
+        description: "Clinical Commissioning Group"
+      - name: nuts
+        dtype: string
+        description: "EU NUTS region code"
+      - name: pfa
+        dtype: string
+        description: "Police Force Area"
+      - name: imd_rank
+        dtype: int32
+        description: "Index of Multiple Deprivation rank"
+      - name: imd_decile
+        dtype: int8
+        description: "IMD decile (1=most deprived, 10=least)"
+
+  # ── dim_airport (HIERARCHY) ──────────────────────────────
+  - name: dim_airport
+    type: hierarchy
+    description: "Aviation infrastructure hierarchy — Country to Runway"
+    source: rdl/airports
+    scd_type: 1
+    grain: "One row per airport with denormalised hierarchy"
+    business_key: [icao_code]
+    hierarchy:
+      name: "aviation_infrastructure"
+      description: "Airport hierarchy from country to individual runways"
+      levels:
+        - level: 1
+          name: country
+          id_field: iso_country
+          name_field: country_name
+          description: "Country (ISO 3166)"
+          example: "GB"
+
+        - level: 2
+          name: region
+          id_field: iso_region
+          name_field: region_name
+          parent_id_field: iso_country
+          description: "Sub-national region"
+          example: "GB-ENG"
+
+        - level: 3
+          name: airport
+          id_field: icao_code
+          name_field: airport_name
+          parent_id_field: iso_region
+          description: "Airport (ICAO code)"
+          example: "EGCC"
+
+        - level: 4
+          name: runway
+          id_field: runway_id
+          name_field: runway_ident
+          parent_id_field: icao_code
+          description: "Individual runway"
+          example: "05L/23R"
+
+    attributes:
+      - name: airport_sk
+        dtype: int32
+        description: "Surrogate key"
+      - name: icao_code
+        dtype: string
+        description: "ICAO airport code"
+      - name: iata_code
+        dtype: string
+        description: "IATA airport code (if assigned)"
+      - name: airport_name
+        dtype: string
+        description: "Full airport name"
+      - name: airport_type
+        dtype: string
+        description: "large_airport, medium_airport, small_airport, heliport, closed"
+      - name: latitude_deg
+        dtype: float64
+      - name: longitude_deg
+        dtype: float64
+      - name: elevation_ft
+        dtype: int32
+      - name: municipality
+        dtype: string
+        description: "Nearest city/town"
+      - name: scheduled_service
+        dtype: bool
+        description: "Has scheduled commercial flights"
+      - name: iso_country
+        dtype: string
+      - name: iso_region
+        dtype: string
+      - name: in_nw_england
+        dtype: bool
+        description: "Within NW England bounding box"
+      - name: is_key_nw
+        dtype: bool
+        description: "One of the key NW private jet airports"
+      - name: num_runways
+        dtype: int8
+      - name: longest_runway_ft
+        dtype: int32
+      - name: runway_surface
+        dtype: string
+        description: "Primary runway surface type"
+      - name: nearest_postcode
+        dtype: string
+        description: "FK to dim_location"
+
+  # ── dim_habitat (HIERARCHY) ──────────────────────────────
+  - name: dim_habitat
+    type: hierarchy
+    description: "UK habitat & landscape classification hierarchy"
+    source: rdl/landscapes
+    scd_type: 1
+    grain: "One row per specific habitat site"
+    business_key: [habitat_id]
+    hierarchy:
+      name: "uk_habitat_classification"
+      description: "Ecological habitat hierarchy from biome to specific site"
+      levels:
+        - level: 1
+          name: biome
+          id_field: biome_code
+          name_field: biome_name
+          description: "Major biome category"
+          example: "Temperate"
+
+        - level: 2
+          name: landscape_type
+          id_field: landscape_code
+          name_field: landscape_name
+          parent_id_field: biome_code
+          description: "Landscape designation type"
+          example: "National Park"
+
+        - level: 3
+          name: habitat_category
+          id_field: habitat_cat_code
+          name_field: habitat_category_name
+          parent_id_field: landscape_code
+          description: "Broad habitat category (UK BAP)"
+          example: "Wetland"
+
+        - level: 4
+          name: habitat_site
+          id_field: habitat_id
+          name_field: habitat_name
+          parent_id_field: habitat_cat_code
+          description: "Specific named site"
+          example: "Leighton Moss RSPB"
+
+    attributes:
+      - name: habitat_sk
+        dtype: int32
+        description: "Surrogate key"
+      - name: habitat_id
+        dtype: string
+        description: "Unique site identifier"
+      - name: habitat_name
+        dtype: string
+        description: "Site name"
+      - name: designation
+        dtype: string
+        description: "SSSI, NNR, AONB, National Park, etc."
+      - name: area_hectares
+        dtype: float64
+      - name: centroid_lat
+        dtype: float64
+      - name: centroid_lon
+        dtype: float64
+      - name: nearest_postcode
+        dtype: string
+        description: "FK to dim_location"
+      - name: managing_org
+        dtype: string
+        description: "RSPB, Natural England, National Trust, etc."
+      - name: public_access
+        dtype: bool
+        description: "Open to public"
+      - name: key_species
+        dtype: string
+        description: "Comma-separated notable species"

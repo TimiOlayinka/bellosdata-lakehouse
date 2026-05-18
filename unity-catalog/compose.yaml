@@ -1,0 +1,57 @@
+# ═══════════════════════════════════════════════════════════════
+# BellosData Unity Catalog OSS — Docker Compose
+# Sovereign Data Governance Layer
+# Genesis: 2026-05-16 | Author: Antigravity
+# ═══════════════════════════════════════════════════════════════
+#
+# Access:
+#   Unity Catalog UI:  http://localhost:3000
+#   Unity Catalog API: http://localhost:8070
+#
+# Usage:
+#   docker compose up -d
+#   docker compose down
+#
+# CLI (attach to server container):
+#   docker exec -it unitycatalog-server-1 /bin/bash
+#   bin/uc catalog list
+#   bin/uc table list --catalog bellosdata --schema bronze
+
+name: unitycatalog
+
+services:
+
+  server:
+    image: unitycatalog/unitycatalog:main
+    container_name: uc-server
+    ports:
+      - "8070:8080"
+    volumes:
+      - type: bind
+        source: ./etc/conf
+        target: /opt/unitycatalog/etc/conf
+      - type: volume
+        source: unitycatalog_data
+        target: /opt/unitycatalog/etc/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8080/api/2.1/unity-catalog/catalogs"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  ui:
+    image: unitycatalog/unitycatalog-ui:main
+    container_name: uc-ui
+    ports:
+      - "3000:3000"
+    environment:
+      - UC_API_URL=http://server:8080
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  unitycatalog_data:

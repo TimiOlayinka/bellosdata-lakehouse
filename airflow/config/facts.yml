@@ -1,0 +1,215 @@
+# ═══════════════════════════════════════════════════════════
+# BellosData Fact Table Registry — Measures & Events
+#
+# Fact tables store the measurable events of the business.
+# Each fact links to multiple dimensions via foreign keys.
+#
+# Author: Awujoo (AWUJOO-041) | Genesis: 2026-05-17
+# ═══════════════════════════════════════════════════════════
+
+version: "1.0"
+layer: "ODL"
+s3_bucket: "playdarch-silver-curated"
+s3_prefix: "odl/fact"
+
+facts:
+
+  # ── fact_weather_observation ─────────────────────────────
+  - name: fact_weather_observation
+    description: "Hourly weather observations across NW England grid"
+    source_rdl: rdl/weather
+    grain: "One row per station per hour"
+    partition_by: [observation_date]
+    dedup_key: [station_point_id, observation_timestamp]
+    dimension_keys:
+      - dim: dim_weather_station
+        fk: station_point_id
+        role: "Where the observation was taken"
+      - dim: dim_date
+        fk: observation_date_key
+        role: "When the observation was taken"
+      - dim: dim_location
+        fk: nearest_postcode
+        role: "Geographic context"
+    measures:
+      - name: temperature_2m_c
+        dtype: float32
+        unit: "°C"
+        agg: avg
+      - name: apparent_temperature_c
+        dtype: float32
+        unit: "°C"
+        agg: avg
+      - name: relative_humidity_pct
+        dtype: float32
+        unit: "%"
+        agg: avg
+      - name: precipitation_mm
+        dtype: float32
+        unit: "mm"
+        agg: sum
+      - name: rain_mm
+        dtype: float32
+        unit: "mm"
+        agg: sum
+      - name: snowfall_cm
+        dtype: float32
+        unit: "cm"
+        agg: sum
+      - name: cloud_cover_pct
+        dtype: float32
+        unit: "%"
+        agg: avg
+      - name: visibility_m
+        dtype: float32
+        unit: "m"
+        agg: avg
+      - name: wind_speed_10m_ms
+        dtype: float32
+        unit: "m/s"
+        agg: avg
+      - name: wind_direction_10m_deg
+        dtype: float32
+        unit: "degrees"
+        agg: avg
+      - name: wind_gusts_10m_ms
+        dtype: float32
+        unit: "m/s"
+        agg: max
+      - name: surface_pressure_hpa
+        dtype: float32
+        unit: "hPa"
+        agg: avg
+      - name: uv_index
+        dtype: float32
+        unit: "index"
+        agg: max
+      - name: weather_code
+        dtype: int16
+        unit: "WMO code"
+        agg: mode
+
+  # ── fact_wind_measurement ────────────────────────────────
+  - name: fact_wind_measurement
+    description: "Multi-height wind measurements for energy & aviation"
+    source_rdl: rdl/wind
+    grain: "One row per point per hour per height"
+    partition_by: [measurement_date]
+    dedup_key: [point_id, measurement_timestamp]
+    dimension_keys:
+      - dim: dim_weather_station
+        fk: point_id
+        role: "Measurement location"
+      - dim: dim_date
+        fk: measurement_date_key
+        role: "When measured"
+    measures:
+      - name: wind_speed_10m_ms
+        dtype: float32
+        unit: "m/s"
+        agg: avg
+      - name: wind_speed_80m_ms
+        dtype: float32
+        unit: "m/s"
+        agg: avg
+      - name: wind_speed_120m_ms
+        dtype: float32
+        unit: "m/s"
+        agg: avg
+      - name: wind_direction_10m_deg
+        dtype: float32
+        unit: "degrees"
+        agg: avg
+      - name: wind_direction_80m_deg
+        dtype: float32
+        unit: "degrees"
+        agg: avg
+      - name: wind_direction_120m_deg
+        dtype: float32
+        unit: "degrees"
+        agg: avg
+      - name: wind_gusts_10m_ms
+        dtype: float32
+        unit: "m/s"
+        agg: max
+      - name: wind_power_density_80m_wm2
+        dtype: float32
+        unit: "W/m²"
+        agg: avg
+        description: "Estimated wind power density at hub height"
+
+  # ── fact_flight_movement ─────────────────────────────────
+  - name: fact_flight_movement
+    description: "Aircraft position snapshots from ADS-B / OpenSky"
+    source_rdl: rdl/private-jets
+    grain: "One row per aircraft per timestamp"
+    partition_by: [snapshot_date]
+    dedup_key: [icao24, snapshot_timestamp]
+    dimension_keys:
+      - dim: dim_airport
+        fk: nearest_airport_icao
+        role: "Nearest airport at time of observation"
+      - dim: dim_date
+        fk: snapshot_date_key
+        role: "When observed"
+      - dim: dim_company
+        fk: operator_company_number
+        role: "Operating company (if matched)"
+    measures:
+      - name: altitude_m
+        dtype: float32
+        unit: "m"
+        agg: avg
+      - name: velocity_ms
+        dtype: float32
+        unit: "m/s"
+        agg: avg
+      - name: vertical_rate_ms
+        dtype: float32
+        unit: "m/s"
+        agg: avg
+      - name: heading_deg
+        dtype: float32
+        unit: "degrees"
+        agg: avg
+      - name: on_ground
+        dtype: bool
+        agg: count
+      - name: latitude
+        dtype: float64
+        agg: avg
+      - name: longitude
+        dtype: float64
+        agg: avg
+
+  # ── fact_company_filing ──────────────────────────────────
+  - name: fact_company_filing
+    description: "Companies House filing events for NW companies"
+    source_rdl: rdl/companies
+    grain: "One row per company per filing"
+    partition_by: [filing_date]
+    dedup_key: [company_number, filing_id]
+    dimension_keys:
+      - dim: dim_company
+        fk: company_number
+        role: "Which company filed"
+      - dim: dim_date
+        fk: filing_date_key
+        role: "When filed"
+      - dim: dim_location
+        fk: registered_postcode
+        role: "Company registered address"
+    measures:
+      - name: filing_count
+        dtype: int32
+        agg: sum
+        description: "Number of filings in grain period"
+    attributes:
+      - name: filing_type
+        dtype: string
+        description: "AA, CS01, AP01, etc."
+      - name: filing_category
+        dtype: string
+        description: "accounts, confirmation-statement, etc."
+      - name: filing_description
+        dtype: string

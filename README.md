@@ -1,7 +1,7 @@
 <p align="center">
-  <h1 align="center">BellosData Lakehouse â€” S3 Delta Lake Platform</h1>
+  <h1 align="center">BellosData Lakehouse - S3 Delta Lake Platform</h1>
   <p align="center">
-    <strong>Serverless data lakehouse on AWS â€” public APIs ingested by Airflow, stored as Delta Lake on S3, modelled via YAML-driven dimensional builders, catalogued by Unity Catalog, and queried with DuckDB.</strong>
+    <strong>Serverless data lakehouse on AWS - public APIs ingested by Airflow, stored as Delta Lake on S3, modelled via YAML-driven dimensional builders, catalogued by Unity Catalog, and queried with DuckDB.</strong>
   </p>
   <p align="center">
     <img src="https://img.shields.io/badge/Apache_Airflow-017CEE?style=for-the-badge&logo=apacheairflow&logoColor=white" alt="Airflow">
@@ -24,7 +24,7 @@ A **production-grade data lakehouse** built entirely on AWS serverless/low-cost 
 
 ```mermaid
 flowchart LR
-    subgraph SOURCES["ðŸŒ Public APIs"]
+    subgraph SOURCES["Public APIs"]
         A1["Open-Meteo\nWeather"]
         A2["Open-Meteo\nWind"]
         A3["eBird / NW Birding\nBird Sightings"]
@@ -33,18 +33,18 @@ flowchart LR
         A6["Companies House\nUK Companies"]
     end
 
-    subgraph PLATFORM["ðŸ–¥ï¸ Lightsail (Docker Compose)"]
+    subgraph PLATFORM["Lightsail - Docker Compose"]
         AF["Apache Airflow 3.2.1\n18 DAGs\nCeleryExecutor"]
         UC["Unity Catalog\nDelta Lake Metadata"]
         DDB["DuckDB\nSQL Console"]
     end
 
-    subgraph BRONZE["ðŸ“¦ S3 Bronze"]
-        B["bellosdata-bronze-raw\nRDL (Delta Lake)\nPartitioned by ingest_date"]
+    subgraph BRONZE["S3 Bronze"]
+        B["bellosdata-bronze-raw\nRDL - Delta Lake\nPartitioned by ingest_date"]
     end
 
-    subgraph SILVER["ðŸ¥ˆ S3 Silver"]
-        S["bellosdata-silver-curated\nODL (Delta Lake)\nDimensions Â· Facts Â· Maps"]
+    subgraph SILVER["S3 Silver"]
+        S["bellosdata-silver-curated\nODL - Delta Lake\nDimensions / Facts / Maps"]
     end
 
     A1 & A2 & A3 & A4 & A5 & A6 -->|"HTTP GET"| AF
@@ -62,7 +62,7 @@ flowchart LR
 
 ### How It Works
 
-1. **18 Airflow DAGs** run on a schedule â€” each ingests data from a public API via HTTP
+1. **18 Airflow DAGs** run on a schedule -- each ingests data from a public API via HTTP
 2. **RDL ingestion DAGs** write raw JSON records to **S3 Bronze** as Delta Lake tables, partitioned by `ingest_date`
 3. **ODL builder DAGs** read YAML configuration files (`dimensions.yml`, `facts.yml`, `mappings.yml`) and construct typed dimensional tables on **S3 Silver**
 4. **Unity Catalog** provides metadata governance across all Delta tables
@@ -73,8 +73,8 @@ flowchart LR
 ## Tech Stack
 
 | Layer | Technology | Purpose |
-|-------|-----------|---------| 
-| **Infrastructure** | Terraform | Lightsail, ECR, ECS, Lambda, API Gateway â€” all as code |
+|-------|-----------|---------|
+| **Infrastructure** | Terraform | Lightsail, ECR, ECS, Lambda, API Gateway -- all as code |
 | **Compute** | AWS Lightsail | Always-on `medium_3_0` (4 GB RAM, 2 vCPU, $24/mo) |
 | **Orchestration** | Apache Airflow 3.2.1 | CeleryExecutor with Redis + PostgreSQL, 18 DAGs |
 | **Containerisation** | Docker Compose | Airflow cluster + Unity Catalog + DuckDB service |
@@ -90,65 +90,65 @@ flowchart LR
 
 ```
 bellosdata-lakehouse/
-â”‚
-â”œâ”€â”€ airflow/
-â”‚   â”œâ”€â”€ dags/                              # 18 orchestration DAGs
-â”‚   â”‚   â”œâ”€â”€ bellosdata_common.py           # Shared: rdl_write, odl_write, http_get, manifests
-â”‚   â”‚   â”œâ”€â”€ aws_session.py                 # AWS credential management
-â”‚   â”‚   â”‚
-â”‚   â”‚   â”œâ”€â”€ rdl_weather_ingestion.py       # Open-Meteo â†’ NW England hourly weather
-â”‚   â”‚   â”œâ”€â”€ rdl_wind_ingestion.py          # Open-Meteo â†’ Multi-height wind data
-â”‚   â”‚   â”œâ”€â”€ nw_bird_ingestion.py           # eBird + NW Birding â†’ Bird sightings
-â”‚   â”‚   â”œâ”€â”€ rdl_airports_ingestion.py      # OurAirports â†’ Global airport data
-â”‚   â”‚   â”œâ”€â”€ rdl_postcodes_ingestion.py     # postcodes.io â†’ UK postcode lookup
-â”‚   â”‚   â”œâ”€â”€ rdl_companies_enhanced.py      # Companies House â†’ NW companies
-â”‚   â”‚   â”œâ”€â”€ rdl_landscapes_ingestion.py    # UK landscape/habitat data
-â”‚   â”‚   â”œâ”€â”€ private_jet_ingestion.py       # OpenSky â†’ NW private jet movements
-â”‚   â”‚   â”‚
-â”‚   â”‚   â”œâ”€â”€ odl_dim_builder.py             # YAML-driven dimension builder
-â”‚   â”‚   â”œâ”€â”€ odl_fact_builder.py            # YAML-driven fact table builder
-â”‚   â”‚   â”œâ”€â”€ odl_mapping_builder.py         # YAML-driven mapping table builder
-â”‚   â”‚   â”‚
-â”‚   â”‚   â”œâ”€â”€ companies_house_upload_dag.py  # Companies House S3 upload
-â”‚   â”‚   â”œâ”€â”€ drive_sync_dag.py              # Google Drive sync
-â”‚   â”‚   â”œâ”€â”€ budget_monitor_dag.py          # AWS cost monitoring
-â”‚   â”‚   â”œâ”€â”€ invoice_engine.py              # Invoice generation
-â”‚   â”‚   â””â”€â”€ receipt_archive_dag.py         # Receipt archival to S3
-â”‚   â”‚
-â”‚   â”œâ”€â”€ config/                            # YAML-driven data model registry
-â”‚   â”‚   â”œâ”€â”€ dimensions.yml                 # 7 dimensions (flat + hierarchy)
-â”‚   â”‚   â”œâ”€â”€ facts.yml                      # 4 fact tables with measures
-â”‚   â”‚   â”œâ”€â”€ mappings.yml                   # 6 mapping/bridge tables
-â”‚   â”‚   â”œâ”€â”€ copy_jobs.yml                  # S3 copy job definitions
-â”‚   â”‚   â””â”€â”€ export_jobs.yml                # Data export configs
-â”‚   â”‚
-â”‚   â”œâ”€â”€ plugins/                           # Airflow custom plugins
-â”‚   â”œâ”€â”€ docker-compose.yaml                # Full Airflow cluster (CeleryExecutor)
-â”‚   â”œâ”€â”€ docker-compose.cloud.yaml          # Cloud-optimised compose
-â”‚   â”œâ”€â”€ duckdb_service.py                  # DuckDB web SQL console service
-â”‚   â””â”€â”€ duckdb_console.py                  # DuckDB CLI helper
-â”‚
-â”œâ”€â”€ terraform/
-â”‚   â””â”€â”€ main.tf                            # Lightsail + ECR + ECS + Lambda API + API Gateway
-â”‚
-â”œâ”€â”€ unity-catalog/
-â”‚   â”œâ”€â”€ compose.yaml                       # Unity Catalog local compose
-â”‚   â”œâ”€â”€ compose.cloud.yaml                 # Unity Catalog cloud compose
-â”‚   â””â”€â”€ etc/conf/                          # Unity Catalog server config
-â”‚
-â”œâ”€â”€ lambda/
-â”‚   â””â”€â”€ ledger_api.py                      # Serverless cloud API (always-on Lambda)
-â”‚
-â”œâ”€â”€ .github/
-â”‚   â””â”€â”€ workflows/
-â”‚       â””â”€â”€ pr_title_checker.yml           # Enforces DATA-X branch naming
-â”‚
-â”œâ”€â”€ deploy-cloud.sh                        # Cloud deployment script (SCP + SSH)
-â”œâ”€â”€ deploy-platform.ps1                    # Windows deployment automation
-â”œâ”€â”€ start-platform.ps1                     # Local platform startup
-â”‚
-â”œâ”€â”€ .gitignore
-â””â”€â”€ README.md
+|
++-- airflow/
+|   +-- dags/                              # 18 orchestration DAGs
+|   |   +-- bellosdata_common.py           # Shared: rdl_write, odl_write, http_get, manifests
+|   |   +-- aws_session.py                 # AWS credential management
+|   |   |
+|   |   +-- rdl_weather_ingestion.py       # Open-Meteo > NW England hourly weather
+|   |   +-- rdl_wind_ingestion.py          # Open-Meteo > Multi-height wind data
+|   |   +-- nw_bird_ingestion.py           # eBird + NW Birding > Bird sightings
+|   |   +-- rdl_airports_ingestion.py      # OurAirports > Global airport data
+|   |   +-- rdl_postcodes_ingestion.py     # postcodes.io > UK postcode lookup
+|   |   +-- rdl_companies_enhanced.py      # Companies House > NW companies
+|   |   +-- rdl_landscapes_ingestion.py    # UK landscape/habitat data
+|   |   +-- private_jet_ingestion.py       # OpenSky > NW private jet movements
+|   |   |
+|   |   +-- odl_dim_builder.py             # YAML-driven dimension builder
+|   |   +-- odl_fact_builder.py            # YAML-driven fact table builder
+|   |   +-- odl_mapping_builder.py         # YAML-driven mapping table builder
+|   |   |
+|   |   +-- companies_house_upload_dag.py  # Companies House S3 upload
+|   |   +-- drive_sync_dag.py              # Google Drive sync
+|   |   +-- budget_monitor_dag.py          # AWS cost monitoring
+|   |   +-- invoice_engine.py              # Invoice generation
+|   |   +-- receipt_archive_dag.py         # Receipt archival to S3
+|   |
+|   +-- config/                            # YAML-driven data model registry
+|   |   +-- dimensions.yml                 # 7 dimensions (flat + hierarchy)
+|   |   +-- facts.yml                      # 4 fact tables with measures
+|   |   +-- mappings.yml                   # 6 mapping/bridge tables
+|   |   +-- copy_jobs.yml                  # S3 copy job definitions
+|   |   +-- export_jobs.yml                # Data export configs
+|   |
+|   +-- plugins/                           # Airflow custom plugins
+|   +-- docker-compose.yaml                # Full Airflow cluster (CeleryExecutor)
+|   +-- docker-compose.cloud.yaml          # Cloud-optimised compose
+|   +-- duckdb_service.py                  # DuckDB web SQL console service
+|   +-- duckdb_console.py                  # DuckDB CLI helper
+|
++-- terraform/
+|   +-- main.tf                            # Lightsail + ECR + ECS + Lambda API + API Gateway
+|
++-- unity-catalog/
+|   +-- compose.yaml                       # Unity Catalog local compose
+|   +-- compose.cloud.yaml                 # Unity Catalog cloud compose
+|   +-- etc/conf/                          # Unity Catalog server config
+|
++-- lambda/
+|   +-- ledger_api.py                      # Serverless cloud API (always-on Lambda)
+|
++-- .github/
+|   +-- workflows/
+|       +-- pr_title_checker.yml           # Enforces DATA-X branch naming
+|
++-- deploy-cloud.sh                        # Cloud deployment script (SCP + SSH)
++-- deploy-platform.ps1                    # Windows deployment automation
++-- start-platform.ps1                     # Local platform startup
+|
++-- .gitignore
++-- README.md
 ```
 
 ---
@@ -159,24 +159,24 @@ The lakehouse ingests data across **6 domains**, all from free public APIs:
 
 | Domain | Source API | Schedule | Key Data |
 |--------|-----------|----------|----------|
-| **Weather** | Open-Meteo | Daily 08:00 UTC | Hourly observations for 8 NW England grid points â€” temp, precipitation, wind, UV |
-| **Wind** | Open-Meteo | Daily 08:30 UTC | Multi-height wind (10m/80m/120m) for energy & aviation analysis |
+| **Weather** | Open-Meteo | Daily 08:00 UTC | Hourly observations for 8 NW England grid points -- temp, precipitation, wind, UV |
+| **Wind** | Open-Meteo | Daily 08:30 UTC | Multi-height wind (10m/80m/120m) for energy and aviation analysis |
 | **NW Birds** | eBird + NW Birding | Daily 09:00 UTC | Bird sightings, species taxonomy, conservation status |
-| **Airports** | OurAirports CSV | Weekly | Global airport database â€” runways, coordinates, ICAO/IATA codes |
-| **Postcodes** | postcodes.io | Weekly | Full UK postcode register â€” geography, IMD, LSOA, constituency |
-| **Companies** | Companies House API | Daily | NW England company register â€” filings, SIC codes, insolvency |
+| **Airports** | OurAirports CSV | Weekly | Global airport database -- runways, coordinates, ICAO/IATA codes |
+| **Postcodes** | postcodes.io | Weekly | Full UK postcode register -- geography, IMD, LSOA, constituency |
+| **Companies** | Companies House API | Daily | NW England company register -- filings, SIC codes, insolvency |
 | **Private Jets** | OpenSky Network | Hourly | ADS-B aircraft positions over NW England airspace |
-| **Landscapes** | Multiple open sources | Monthly | UK habitat & landscape classification â€” SSSIs, NNRs, AONBs |
+| **Landscapes** | Multiple open sources | Monthly | UK habitat and landscape classification -- SSSIs, NNRs, AONBs |
 
 ---
 
 ## Medallion Architecture
 
-The lakehouse follows a **Bronze â†’ Silver** medallion pattern with YAML-driven transformation:
+The lakehouse follows a **Bronze > Silver** medallion pattern with YAML-driven transformation:
 
 ```mermaid
 flowchart TB
-    subgraph BRONZE["Bronze â€” S3 Raw Data Layer (RDL)"]
+    subgraph BRONZE["Bronze -- S3 Raw Data Layer RDL"]
         direction LR
         R1["rdl/weather"]
         R2["rdl/wind"]
@@ -188,24 +188,24 @@ flowchart TB
         R8["rdl/landscapes"]
     end
 
-    subgraph SILVER["Silver â€” S3 Curated Layer (ODL)"]
+    subgraph SILVER["Silver -- S3 Curated Layer ODL"]
         direction LR
-        subgraph DIMS["Dimensions (7)"]
+        subgraph DIMS["Dimensions 7"]
             D1["dim_date"]
             D2["dim_weather_station"]
             D3["dim_species"]
             D4["dim_company"]
-            D5["dim_location âŠž"]
-            D6["dim_airport âŠž"]
-            D7["dim_habitat âŠž"]
+            D5["dim_location H"]
+            D6["dim_airport H"]
+            D7["dim_habitat H"]
         end
-        subgraph FACTS["Facts (4)"]
+        subgraph FACTS["Facts 4"]
             F1["fact_weather_observation"]
             F2["fact_wind_measurement"]
             F3["fact_flight_movement"]
             F4["fact_company_filing"]
         end
-        subgraph MAPS["Mappings (6)"]
+        subgraph MAPS["Mappings 6"]
             M1["map_postcode_to_location"]
             M2["map_company_to_postcode"]
             M3["map_airport_to_location"]
@@ -221,12 +221,12 @@ flowchart TB
     style SILVER fill:#C0C0C0,color:#000
 ```
 
-> **âŠž** = Hierarchy dimension (multi-level parent-child: e.g. `dim_location` = Country â†’ Region â†’ County â†’ District â†’ Ward â†’ Postcode)
+> **H** = Hierarchy dimension (multi-level parent-child: e.g. `dim_location` = Country > Region > County > District > Ward > Postcode)
 
 | Layer | S3 Bucket | Format | Purpose |
 |-------|-----------|--------|---------|
 | **Bronze (RDL)** | `bellosdata-bronze-raw` | Delta Lake (append) | Raw JSON records, partitioned by `ingest_date`. Source of truth. |
-| **Silver (ODL)** | `bellosdata-silver-curated` | Delta Lake (overwrite) | Typed star schema â€” dimensions, facts, mappings. Surrogate keys. |
+| **Silver (ODL)** | `bellosdata-silver-curated` | Delta Lake (overwrite) | Typed star schema -- dimensions, facts, mappings. Surrogate keys. |
 
 ---
 
@@ -236,14 +236,14 @@ Instead of hand-coding SQL transformations, the lakehouse uses **3 YAML registri
 
 | Registry | File | Drives | Contents |
 |----------|------|--------|----------|
-| **Dimensions** | `config/dimensions.yml` | `odl_dim_builder.py` | 7 dimensions â€” flat (SCD1/2) and hierarchy (multi-level parent-child) |
-| **Facts** | `config/facts.yml` | `odl_fact_builder.py` | 4 fact tables â€” grain, dimension keys, measures with aggregation types |
-| **Mappings** | `config/mappings.yml` | `odl_mapping_builder.py` | 6 bridge tables â€” one-to-one, many-to-one, many-to-many with fuzzy matching |
+| **Dimensions** | `config/dimensions.yml` | `odl_dim_builder.py` | 7 dimensions -- flat (SCD1/2) and hierarchy (multi-level parent-child) |
+| **Facts** | `config/facts.yml` | `odl_fact_builder.py` | 4 fact tables -- grain, dimension keys, measures with aggregation types |
+| **Mappings** | `config/mappings.yml` | `odl_mapping_builder.py` | 6 bridge tables -- one-to-one, many-to-one, many-to-many with fuzzy matching |
 
 ### Example: Adding a new dimension
 
 ```yaml
-# dimensions.yml â€” just add a new entry:
+# dimensions.yml -- just add a new entry:
 - name: dim_my_new_entity
   type: flat
   source: rdl/my_source
@@ -268,14 +268,14 @@ The `odl_dim_builder` DAG will automatically detect the new entry and create the
 
 | DAG | Schedule | Category | Purpose |
 |-----|----------|----------|---------|
-| `rdl_weather_ingestion` | `0 8 * * *` | RDL | Open-Meteo â†’ 8 NW grid points hourly weather |
-| `rdl_wind_ingestion` | `0 8 30 * * *` | RDL | Open-Meteo â†’ Multi-height wind data |
-| `nw_bird_ingestion` | `0 9 * * *` | RDL | eBird + NW Birding â†’ Bird sightings |
-| `rdl_airports_ingestion` | `0 6 * * 1` | RDL | OurAirports CSV â†’ Global airport data |
-| `rdl_postcodes_ingestion` | `0 7 * * 1` | RDL | postcodes.io â†’ Full UK postcode register |
-| `rdl_companies_enhanced` | `0 10 * * *` | RDL | Companies House API â†’ NW company register |
+| `rdl_weather_ingestion` | `0 8 * * *` | RDL | Open-Meteo > 8 NW grid points hourly weather |
+| `rdl_wind_ingestion` | `0 8 30 * * *` | RDL | Open-Meteo > Multi-height wind data |
+| `nw_bird_ingestion` | `0 9 * * *` | RDL | eBird + NW Birding > Bird sightings |
+| `rdl_airports_ingestion` | `0 6 * * 1` | RDL | OurAirports CSV > Global airport data |
+| `rdl_postcodes_ingestion` | `0 7 * * 1` | RDL | postcodes.io > Full UK postcode register |
+| `rdl_companies_enhanced` | `0 10 * * *` | RDL | Companies House API > NW company register |
 | `rdl_landscapes_ingestion` | `0 6 1 * *` | RDL | UK landscapes + habitats |
-| `private_jet_ingestion` | `0 * * * *` | RDL | OpenSky â†’ NW airspace ADS-B positions |
+| `private_jet_ingestion` | `0 * * * *` | RDL | OpenSky > NW airspace ADS-B positions |
 | `odl_dim_builder` | Asset-triggered | ODL | YAML-driven dimension table builder |
 | `odl_fact_builder` | Asset-triggered | ODL | YAML-driven fact table builder |
 | `odl_mapping_builder` | Asset-triggered | ODL | YAML-driven mapping table builder |
@@ -285,7 +285,7 @@ The `odl_dim_builder` DAG will automatically detect the new entry and create the
 | `invoice_engine` | Manual | Business | Invoice generation pipeline |
 | `receipt_archive_dag` | `0 3 * * *` | Ops | Receipt archival to S3 |
 
-> **Asset-triggered** DAGs use Airflow's Asset-based scheduling â€” they automatically run when upstream RDL DAGs publish new data.
+> **Asset-triggered** DAGs use Airflow's Asset-based scheduling -- they automatically run when upstream RDL DAGs publish new data.
 
 ---
 
@@ -297,7 +297,7 @@ The entire platform runs on a single **AWS Lightsail** instance via Docker Compo
 
 ```mermaid
 flowchart TB
-    subgraph LIGHTSAIL["AWS Lightsail â€” bellosdata-platform"]
+    subgraph LIGHTSAIL["AWS Lightsail -- bellosdata-platform"]
         subgraph DOCKER["Docker Compose"]
             PG["PostgreSQL 16\n(Airflow metadata)"]
             RD["Redis 7.2\n(Celery broker)"]
@@ -323,7 +323,7 @@ flowchart TB
 
 | Component | Details |
 |-----------|---------|
-| **Instance** | Lightsail `medium_3_0` â€” 4 GB RAM, 2 vCPU, 80 GB SSD |
+| **Instance** | Lightsail `medium_3_0` -- 4 GB RAM, 2 vCPU, 80 GB SSD |
 | **OS** | Amazon Linux 2023 |
 | **Static IP** | Elastic IP attached for persistent access |
 | **Ports** | 8081 (Airflow UI), 8070 (Unity Catalog API), 3000 (Unity Catalog UI) |
@@ -338,7 +338,7 @@ flowchart TB
 | `aws_ecr_repository` | Container registry for pipeline images |
 | `aws_ecs_cluster` + `task_definition` | Fargate-ready for future container workloads |
 | `aws_apigatewayv2_api` | HTTP API Gateway for serverless Lambda API |
-| `aws_lambda_function` | `ledger-cloud-api` â€” always-on serverless endpoint |
+| `aws_lambda_function` | `ledger-cloud-api` -- always-on serverless endpoint |
 
 ---
 
@@ -384,4 +384,4 @@ cd .. && pwsh deploy-platform.ps1
 
 ---
 
-**Built by [Timi Olayinka](https://github.com/TimiOlayinka)** â€” Data Engineering & AI Automation
+**Built by [Timi Olayinka](https://github.com/TimiOlayinka)** -- Data Engineering and AI Automation

@@ -96,18 +96,11 @@ Write-Host "  DAGs synced" -ForegroundColor Green
 # ── Deploy compose files ──
 Write-Host "Syncing compose files..." -ForegroundColor Yellow
 Invoke-Expression "$SCP `"$ROOT\airflow\docker-compose.cloud.yaml`" ec2-user@${IP}:/home/ec2-user/platform/airflow/docker-compose.cloud.yaml"
-Invoke-Expression "$SCP `"$ROOT\unity-catalog\compose.cloud.yaml`" ec2-user@${IP}:/home/ec2-user/platform/unity-catalog/compose.cloud.yaml"
 Write-Host "  Compose files synced" -ForegroundColor Green
-
-# ── Deploy UC server properties ──
-Write-Host "Syncing Unity Catalog config..." -ForegroundColor Yellow
-Invoke-Expression "$SCP `"$ROOT\unity-catalog\etc\conf\server.cloud.properties`" ec2-user@${IP}:/home/ec2-user/platform/unity-catalog/etc/conf/server.properties"
-Write-Host "  UC config synced" -ForegroundColor Green
 
 if ($Restart) {
     Write-Host ""
     Write-Host "Restarting cloud services..." -ForegroundColor Yellow
-    Invoke-Expression "$SSH 'cd /home/ec2-user/platform && docker compose -f unity-catalog/compose.cloud.yaml down && docker compose -f unity-catalog/compose.cloud.yaml up -d'"
     Invoke-Expression "$SSH 'cd /home/ec2-user/platform && docker compose -f airflow/docker-compose.cloud.yaml down && docker compose -f airflow/docker-compose.cloud.yaml up -d'"
     Write-Host "  Services restarted!" -ForegroundColor Green
 }
@@ -118,6 +111,6 @@ Write-Host "  Deploy Complete" -ForegroundColor Green
 Write-Host "══════════════════════════════════════════════════" -ForegroundColor DarkCyan
 Write-Host ""
 Write-Host "  Airflow UI:        " -NoNewline; Write-Host "http://${IP}:8081" -ForegroundColor Cyan
-Write-Host "  Unity Catalog UI:  " -NoNewline; Write-Host "http://${IP}:3000" -ForegroundColor Cyan
-Write-Host "  Unity Catalog API: " -NoNewline; Write-Host "http://${IP}:8070" -ForegroundColor Cyan
+Write-Host "  Glue Catalog:      " -NoNewline; Write-Host "https://eu-west-2.console.aws.amazon.com/glue/home?region=eu-west-2#/v2/data-catalog/databases/bellosdata" -ForegroundColor Cyan
+Write-Host "  Redshift Query:    " -NoNewline; Write-Host "https://eu-west-2.console.aws.amazon.com/sqlworkbench/home?region=eu-west-2" -ForegroundColor Cyan
 Write-Host ""

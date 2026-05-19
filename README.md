@@ -1,14 +1,14 @@
 <p align="center">
   <h1 align="center">BellosData Lakehouse - S3 Delta Lake Platform</h1>
   <p align="center">
-    <strong>Serverless data lakehouse on AWS - public APIs ingested by Airflow, stored as Delta Lake on S3, modelled via YAML-driven dimensional builders, catalogued by Unity Catalog, and queried with DuckDB.</strong>
+    <strong>AWS-native data lakehouse — public APIs ingested by Airflow, stored as Delta Lake on S3, modelled via YAML-driven dimensional builders, catalogued by AWS Glue, and queried with Redshift Serverless.</strong>
   </p>
   <p align="center">
     <img src="https://img.shields.io/badge/Apache_Airflow-017CEE?style=for-the-badge&logo=apacheairflow&logoColor=white" alt="Airflow">
     <img src="https://img.shields.io/badge/Delta_Lake-003366?style=for-the-badge&logo=databricks&logoColor=white" alt="Delta Lake">
     <img src="https://img.shields.io/badge/Amazon_S3-569A31?style=for-the-badge&logo=amazons3&logoColor=white" alt="S3">
-    <img src="https://img.shields.io/badge/Unity_Catalog-FF3621?style=for-the-badge&logo=databricks&logoColor=white" alt="Unity Catalog">
-    <img src="https://img.shields.io/badge/DuckDB-FFF000?style=for-the-badge&logo=duckdb&logoColor=black" alt="DuckDB">
+    <img src="https://img.shields.io/badge/AWS_Glue-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white" alt="AWS Glue">
+    <img src="https://img.shields.io/badge/Amazon_Redshift-8C4FFF?style=for-the-badge&logo=amazonredshift&logoColor=white" alt="Redshift">
     <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
     <img src="https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white" alt="Terraform">
     <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
@@ -20,7 +20,7 @@
 
 ## Architecture Overview
 
-A **production-grade data lakehouse** built entirely on AWS serverless/low-cost services. The platform ingests data from **6 public APIs**, stores it as **Delta Lake** tables on S3, transforms it through **YAML-driven dimensional builders**, and serves it via **Unity Catalog** and **DuckDB**.
+A **production-grade data lakehouse** built entirely on AWS serverless/low-cost services. The platform ingests data from **6 public APIs**, stores it as **Delta Lake** tables on S3, transforms it through **YAML-driven dimensional builders**, catalogues metadata via **AWS Glue Data Catalog**, and serves analytics through **Redshift Serverless** (compute-only, no Spectrum fees).
 
 ```mermaid
 flowchart LR
@@ -34,30 +34,31 @@ flowchart LR
     end
 
     subgraph PLATFORM["Lightsail - Docker Compose"]
-        AF["Apache Airflow 3.2.1\n18 DAGs\nCeleryExecutor"]
-        UC["Unity Catalog\nDelta Lake Metadata"]
-        DDB["DuckDB\nSQL Console"]
+        AF["Apache Airflow 3.2.1\n18 DAGs\nLocalExecutor"]
     end
 
-    subgraph BRONZE["S3 Bronze"]
+    subgraph STORAGE["S3 Medallion Lakehouse"]
         B["bellosdata-bronze-raw\nRDL - Delta Lake\nPartitioned by ingest_date"]
+        S["bellosdata-silver-curated\nODL - Delta Lake\nDimensions / Facts / Maps"]
     end
 
-    subgraph SILVER["S3 Silver"]
-        S["bellosdata-silver-curated\nODL - Delta Lake\nDimensions / Facts / Maps"]
+    subgraph MANAGED["AWS Managed Services"]
+        GLUE["AWS Glue Data Catalog\nTable Metadata"]
+        RS["Redshift Serverless\n8 RPU / Auto-pause"]
     end
 
     A1 & A2 & A3 & A4 & A5 & A6 -->|"HTTP GET"| AF
     AF -->|"RDL Write\n(Delta append)"| B
     AF -->|"ODL Builders\n(YAML-driven)"| S
+    AF -->|"Catalog Sync"| GLUE
     B -->|"Source data"| S
-    S --> UC
-    S --> DDB
+    GLUE -->|"Table metadata"| RS
+    RS -->|"Query S3 directly"| B & S
 
     style SOURCES fill:#4285F4,color:#fff
     style PLATFORM fill:#FF9900,color:#fff
-    style BRONZE fill:#CD7F32,color:#fff
-    style SILVER fill:#C0C0C0,color:#000
+    style STORAGE fill:#CD7F32,color:#fff
+    style MANAGED fill:#8C4FFF,color:#fff
 ```
 
 ### How It Works
@@ -65,8 +66,8 @@ flowchart LR
 1. **18 Airflow DAGs** run on a schedule -- each ingests data from a public API via HTTP
 2. **RDL ingestion DAGs** write raw JSON records to **S3 Bronze** as Delta Lake tables, partitioned by `ingest_date`
 3. **ODL builder DAGs** read YAML configuration files (`dimensions.yml`, `facts.yml`, `mappings.yml`) and construct typed dimensional tables on **S3 Silver**
-4. **Unity Catalog** provides metadata governance across all Delta tables
-5. **DuckDB** web SQL console enables ad-hoc querying of both Bronze and Silver layers
+4. **Glue Catalog Sync DAG** registers all Delta tables in **AWS Glue Data Catalog** for metadata governance
+5. **Redshift Serverless** queries S3 Delta Lake directly via external schemas -- no Spectrum fees, auto-pauses when idle
 
 ---
 
@@ -74,14 +75,14 @@ flowchart LR
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| **Infrastructure** | Terraform | Lightsail, ECR, ECS, Lambda, API Gateway -- all as code |
+| **Infrastructure** | Terraform | Lightsail, ECR, ECS, Lambda, API Gateway, Glue, Redshift -- all as code |
 | **Compute** | AWS Lightsail | Always-on `medium_3_0` (4 GB RAM, 2 vCPU, $24/mo) |
-| **Orchestration** | Apache Airflow 3.2.1 | CeleryExecutor with Redis + PostgreSQL, 18 DAGs |
-| **Containerisation** | Docker Compose | Airflow cluster + Unity Catalog + DuckDB service |
+| **Orchestration** | Apache Airflow 3.2.1 | LocalExecutor with PostgreSQL, 18 DAGs |
+| **Containerisation** | Docker Compose | Airflow cluster (4 containers) |
 | **Storage** | Amazon S3 | Two-tier Delta Lake: Bronze (`bellosdata-bronze-raw`) + Silver (`bellosdata-silver-curated`) |
 | **Table Format** | Delta Lake | ACID transactions, time travel, schema enforcement |
-| **Catalog** | Unity Catalog (OSS) | Data governance, table metadata, access control |
-| **Query Engine** | DuckDB | In-process SQL analytics + web console |
+| **Catalog** | AWS Glue Data Catalog | Managed metadata governance, Hive Metastore-compatible |
+| **Query Engine** | Redshift Serverless | Compute-only, 8 RPU, auto-pause, queries S3 natively (no Spectrum fees) |
 | **Language** | Python 3.11 | All DAGs, builders, and utilities |
 
 ---
@@ -124,9 +125,7 @@ bellosdata-lakehouse/
 |   |
 |   +-- plugins/                           # Airflow custom plugins
 |   +-- docker-compose.yaml                # Full Airflow cluster (CeleryExecutor)
-|   +-- docker-compose.cloud.yaml          # Cloud-optimised compose
-|   +-- duckdb_service.py                  # DuckDB web SQL console service
-|   +-- duckdb_console.py                  # DuckDB CLI helper
+|   +-- docker-compose.cloud.yaml          # Cloud-optimised compose (LocalExecutor)
 |
 +-- terraform/
 |   +-- main.tf                            # Lightsail + ECR + ECS + Lambda API + API Gateway
@@ -293,32 +292,31 @@ The `odl_dim_builder` DAG will automatically detect the new entry and create the
 
 ### Lightsail + Docker Compose
 
-The entire platform runs on a single **AWS Lightsail** instance via Docker Compose:
+Airflow orchestration runs on a single **AWS Lightsail** instance via Docker Compose. Catalog and query are **managed AWS services**:
 
 ```mermaid
 flowchart TB
     subgraph LIGHTSAIL["AWS Lightsail -- bellosdata-platform"]
         subgraph DOCKER["Docker Compose"]
             PG["PostgreSQL 16\n(Airflow metadata)"]
-            RD["Redis 7.2\n(Celery broker)"]
             API["Airflow API Server\n:8081"]
             SCH["Airflow Scheduler"]
-            WRK["Airflow Worker"]
-            TRG["Airflow Triggerer"]
             DAG["DAG Processor"]
-            UC["Unity Catalog\n:8070 API / :3000 UI"]
         end
     end
 
+    subgraph MANAGED["AWS Managed Services"]
+        GLUE["Glue Data Catalog"]
+        RS["Redshift Serverless\n8 RPU / auto-pause"]
+    end
+
     PG --- API
-    RD --- WRK
     API --- SCH
-    SCH --- WRK
     SCH --- DAG
-    SCH --- TRG
 
     style LIGHTSAIL fill:#FF9900,color:#fff
     style DOCKER fill:#2496ED,color:#fff
+    style MANAGED fill:#8C4FFF,color:#fff
 ```
 
 | Component | Details |
@@ -326,15 +324,19 @@ flowchart TB
 | **Instance** | Lightsail `medium_3_0` -- 4 GB RAM, 2 vCPU, 80 GB SSD |
 | **OS** | Amazon Linux 2023 |
 | **Static IP** | Elastic IP attached for persistent access |
-| **Ports** | 8081 (Airflow UI), 8070 (Unity Catalog API), 3000 (Unity Catalog UI) |
-| **Docker services** | 8 containers: PostgreSQL, Redis, API Server, Scheduler, Worker, Triggerer, DAG Processor, Unity Catalog |
+| **Ports** | 8081 (Airflow UI) |
+| **Docker services** | 4 containers: PostgreSQL, API Server, Scheduler, DAG Processor |
 
 ### Terraform Resources
 
 | Resource | Description |
 |----------|-------------|
 | `aws_lightsail_instance` | Data platform instance with Docker bootstrap |
-| `aws_lightsail_static_ip` | Persistent IP for Airflow + Unity Catalog access |
+| `aws_lightsail_static_ip` | Persistent IP for Airflow access |
+| `aws_glue_catalog_database` | `bellosdata` -- lakehouse metadata catalog |
+| `aws_redshiftserverless_namespace` | `bellosdata` -- Redshift database + admin credentials |
+| `aws_redshiftserverless_workgroup` | `bellosdata-workgroup` -- 8 RPU compute, auto-pause |
+| `aws_iam_role` | Redshift → S3 + Glue access role |
 | `aws_ecr_repository` | Container registry for pipeline images |
 | `aws_ecs_cluster` + `task_definition` | Fargate-ready for future container workloads |
 | `aws_apigatewayv2_api` | HTTP API Gateway for serverless Lambda API |
@@ -347,11 +349,13 @@ flowchart TB
 | Service | Monthly | Notes |
 |---------|---------|-------|
 | Lightsail | $24.00 | Always-on 4 GB instance |
+| Redshift Serverless | ~$3-6 | 8 RPU, auto-pause after 5 min, ~2h/mo query time |
 | S3 (Bronze + Silver) | ~$0.05 | < 500 MB Delta Lake tables |
+| Glue Data Catalog | $0.00 | Free Tier (first 1M objects) |
 | Lambda (API) | $0.00 | Free Tier |
 | API Gateway | $0.00 | Free Tier |
 | ECR | $0.00 | Free Tier storage |
-| **Total** | **~$24/month** | |
+| **Total** | **~$27-30/month** | |
 
 ---
 
@@ -375,8 +379,8 @@ docker compose up -d
 
 # Access services
 # Airflow UI:        http://localhost:8081
-# Unity Catalog UI:  http://localhost:3000
-# Unity Catalog API: http://localhost:8070
+# Glue Catalog:      AWS Console > Glue > Databases > bellosdata
+# Redshift Query:    AWS Console > Redshift Query Editor v2
 
 # Deploy to cloud (Lightsail)
 cd .. && pwsh deploy-platform.ps1

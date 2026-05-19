@@ -40,7 +40,7 @@ resource "aws_lightsail_instance" "data_platform" {
   tags = {
     Project = "BellosData"
     Role    = "data-platform"
-    Stack   = "airflow-unity-catalog"
+    Stack   = "airflow-glue-redshift"
   }
 
   user_data = <<-EOF
@@ -64,7 +64,7 @@ resource "aws_lightsail_instance" "data_platform" {
 
     # ── Clone repository ──
     cd /home/ec2-user
-    git clone https://github.com/TimiOlayinka/boohoo-data-pipeline.git platform
+    git clone https://github.com/TimiOlayinka/bellosdata-lakehouse.git platform
     chown -R ec2-user:ec2-user platform
 
     # ── Create .env file (credentials injected via deploy script) ──
@@ -76,6 +76,10 @@ resource "aws_lightsail_instance" "data_platform" {
 
     echo "Bootstrap complete. Run deploy-platform.ps1 to configure and start services."
   EOF
+
+  lifecycle {
+    ignore_changes = [user_data]
+  }
 }
 
 resource "aws_lightsail_static_ip" "data_platform_ip" {
@@ -100,18 +104,6 @@ resource "aws_lightsail_instance_public_ports" "data_platform_ports" {
     protocol  = "tcp"
     from_port = 8081
     to_port   = 8081 # Airflow UI
-  }
-
-  port_info {
-    protocol  = "tcp"
-    from_port = 8070
-    to_port   = 8070 # Unity Catalog API
-  }
-
-  port_info {
-    protocol  = "tcp"
-    from_port = 3000
-    to_port   = 3000 # Unity Catalog UI
   }
 }
 
@@ -163,6 +155,80 @@ resource "aws_cloudwatch_log_group" "ecs_log_group" {
 }
 
 # ═══════════════════════════════════════════════════════════════
+# AWS Glue Data Catalog — Lakehouse Metadata
+# Replaces Unity Catalog OSS for table governance
+# ═══════════════════════════════════════════════════════════════
+
+resource "aws_glue_catalog_database" "bellosdata" {
+  name        = "bellosdata"
+  description = "BellosData Lakehouse — Delta Lake tables on S3 (Bronze + Silver + Gold)"
+}
+
+# ═══════════════════════════════════════════════════════════════
+# Redshift Serverless — Query Engine (compute-only, S3 native)
+# Replaces DuckDB for production analytics
+# Queries S3 Delta Lake directly — no Spectrum fees
+# ═══════════════════════════════════════════════════════════════
+
+variable "redshift_admin_password" {
+  description = "Admin password for Redshift Serverless namespace"
+  type        = string
+  sensitive   = true
+}
+
+resource "aws_iam_role" "redshift_s3_glue" {
+  name = "bellosdata-redshift-s3-glue-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "redshift.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+
+  tags = {
+    Project = "BellosData"
+    Role    = "redshift-data-access"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "redshift_s3_read" {
+  role       = aws_iam_role.redshift_s3_glue.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "redshift_glue_access" {
+  role       = aws_iam_role.redshift_s3_glue.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess"
+}
+
+resource "aws_redshiftserverless_namespace" "bellosdata" {
+  namespace_name      = "bellosdata"
+  db_name             = "bellosdata"
+  admin_username      = "admin"
+  admin_user_password = var.redshift_admin_password
+  iam_roles           = [aws_iam_role.redshift_s3_glue.arn]
+
+  tags = {
+    Project = "BellosData"
+    Role    = "query-engine"
+  }
+}
+
+resource "aws_redshiftserverless_workgroup" "bellosdata" {
+  workgroup_name = "bellosdata-workgroup"
+  namespace_name = aws_redshiftserverless_namespace.bellosdata.namespace_name
+  base_capacity  = 8 # Minimum RPUs — auto-pauses when idle
+
+  tags = {
+    Project = "BellosData"
+    Role    = "query-engine"
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════
 # Lambda Cloud API — The Light That Never Goes Out
 # ═══════════════════════════════════════════════════════════════
 
@@ -204,7 +270,7 @@ output "ledger_api_id" {
 
 output "data_platform_ip" {
   value       = aws_lightsail_static_ip.data_platform_ip.ip_address
-  description = "Data Platform static IP (Airflow + Unity Catalog)"
+  description = "Data Platform static IP (Airflow)"
 }
 
 output "airflow_url" {
@@ -212,7 +278,17 @@ output "airflow_url" {
   description = "Airflow UI URL"
 }
 
-output "unity_catalog_url" {
-  value       = "http://${aws_lightsail_static_ip.data_platform_ip.ip_address}:3000"
-  description = "Unity Catalog UI URL"
+output "glue_catalog_database" {
+  value       = aws_glue_catalog_database.bellosdata.name
+  description = "Glue Data Catalog database for lakehouse tables"
+}
+
+output "redshift_workgroup" {
+  value       = aws_redshiftserverless_workgroup.bellosdata.workgroup_name
+  description = "Redshift Serverless workgroup name"
+}
+
+output "redshift_endpoint" {
+  value       = aws_redshiftserverless_workgroup.bellosdata.endpoint
+  description = "Redshift Serverless endpoint for SQL connections"
 }
